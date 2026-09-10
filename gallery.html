@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d1117">
 <title>wbi 画廊</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v20260910b">
 </head>
 <body>
 
@@ -35,7 +35,7 @@
 </div>
 
 <div id="toasts"></div>
-<script src="app.js"></script>
+<script src="app.js?v20260910b"></script>
 <script>
 var HIST = [], ONLY_OK = false;
 var FILTERS = [['全部',false],['只看成功',true]]; var fi = 0;
@@ -56,8 +56,8 @@ function render(){
       title.replace(/'/g,'') + '\')">' +
       '<img data-img="outputs/' + x.file + '" alt=""></a>';
   }).join('') || '<div class="hint">无成功记录</div>';
-  hydrateImages(g);
 
+  /* 先把列表填好，避免后面任何异常导致列表卡在“加载中” */
   l.innerHTML = rows.slice(0,80).map(function(x){
     const t = x.ts ? new Date(x.ts*1000).toLocaleString('zh-CN') : '';
     if(x.ok){
@@ -69,6 +69,11 @@ function render(){
     return '<div class="it"><span class="nm" style="color:var(--err)">✕ ' + String(x.error||'').slice(0,42) + '</span>' +
            '<span class="mt">' + t.slice(5,16) + '</span></div>';
   }).join('');
+
+  /* 列表填完后再异步填图（失败也不影响列表） */
+  try { if(typeof hydrateImages === 'function') hydrateImages(g);
+        else toast('页面资源是旧缓存，请强制刷新（已自动重载）','warn',6000), setTimeout(function(){ location.reload(true); }, 1200);
+  } catch(e){ toast('填图异常：'+e.message,'err',6000); }
 }
 
 async function load(silent){
