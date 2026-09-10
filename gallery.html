@@ -24,6 +24,9 @@
     还没有出图记录<br><br>
     去【🎛 控制台】写提示词 → 点「⚡ 立即生图」
   </div>
+  <div class="hint" id="galHint" style="display:none">
+    图片存在私有仓库里，本页用你的令牌实时读取（所以加载要等一两秒）
+  </div>
 </div>
 
 <div class="card">
@@ -37,50 +40,59 @@
 var HIST = [], ONLY_OK = false;
 var FILTERS = [['全部',false],['只看成功',true]]; var fi = 0;
 
-function raw(p){ return 'https://raw.githubusercontent.com/' + WBI.REPO + '/main/outputs/' + p; }
-
 function render(){
   const rows = HIST.filter(function(x){ return !ONLY_OK || (x.ok && x.file); });
   $('cnt').textContent = rows.length + ' 条';
   const g = $('gal'), l = $('list');
-  if(!rows.length){ g.innerHTML=''; $('empty').style.display='block'; l.innerHTML='<div class="it">无记录</div>'; return; }
+  const good = rows.filter(function(x){ return x.ok && x.file; });
+  if(!rows.length){ g.innerHTML=''; $('empty').style.display='block'; $('galHint').style.display='none';
+    l.innerHTML='<div class="it">无记录</div>'; return; }
   $('empty').style.display='none';
-  g.innerHTML = rows.filter(function(x){ return x.ok && x.file; }).slice(0,60).map(function(x){
-    return '<a href="' + raw(x.file) + '" target="_blank" title="' + (x.model||'') + '">' +
-           '<img loading="lazy" src="' + raw(x.file) + '"></a>';
+  $('galHint').style.display = good.length ? 'block' : 'none';
+
+  g.innerHTML = good.slice(0,60).map(function(x){
+    const title = String(x.model||'') + ' · ' + String(x.prompt||'').slice(0,40);
+    return '<a href="javascript:;" onclick="openLightbox(\'outputs/' + x.file + '\',\'' +
+      title.replace(/'/g,'') + '\')">' +
+      '<img data-img="outputs/' + x.file + '" alt=""></a>';
   }).join('') || '<div class="hint">无成功记录</div>';
+  hydrateImages(g);
+
   l.innerHTML = rows.slice(0,80).map(function(x){
     const t = x.ts ? new Date(x.ts*1000).toLocaleString('zh-CN') : '';
     if(x.ok){
-      return '<div class="it"><span class="nm" title="' + (x.prompt||'').replace(/"/g,'') + '">' +
-        (x.model||'') + ' · ' + String(x.prompt||'').slice(0,26) + '</span>' +
+      return '<div class="it"><span class="nm" title="' + String(x.prompt||'').replace(/"/g,'') + '">' +
+        (x.model||'') + ' · ' + String(x.prompt||'').slice(0,24) + '</span>' +
         '<span class="mt">' + Math.round((x.bytes||0)/1024) + 'KB<br>' + t.slice(5,16) + '</span>' +
-        '<a href="' + raw(x.file) + '" target="_blank"><button>看</button></a></div>';
+        '<button onclick="openLightbox(\'outputs/' + x.file + '\',\'' + String(x.model||'').replace(/'/g,'') + '\')">看</button></div>';
     }
-    return '<div class="it"><span class="nm" style="color:var(--err)">✕ ' + String(x.error||'').slice(0,44) + '</span>' +
+    return '<div class="it"><span class="nm" style="color:var(--err)">✕ ' + String(x.error||'').slice(0,42) + '</span>' +
            '<span class="mt">' + t.slice(5,16) + '</span></div>';
   }).join('');
 }
 
-async function load(){
-  if(!WBI.TOK){ $('last').textContent='请先连接令牌'; return; }
+async function load(silent){
+  if(!WBI.TOK){ $('last').textContent='请先连接令牌'; $('list').innerHTML='<div class="it">未连接</div>'; return; }
   const h = await readFile('outputs/history.json');
   try{ HIST = JSON.parse(h.text || '[]'); }catch(e){ HIST = []; }
   const ok = HIST.filter(function(x){ return x.ok && x.file; });
   if(ok[0]){
     const t = new Date((ok[0].ts||0)*1000);
-    $('last').innerHTML = '最近一张：<b>' + ok[0].file + '</b>（' + Math.round((ok[0].bytes||0)/1024) +
+    $('last').innerHTML = '最近：<b>' + ok[0].file + '</b>（' + Math.round((ok[0].bytes||0)/1024) +
       ' KB，' + ok[0].source + '/' + ok[0].model + '，' + t.toLocaleString('zh-CN') + '）';
   } else $('last').textContent = '还没有出图记录';
   render();
+  if(!silent && !ok.length) toast('暂无出图记录','warn');
 }
 
-$('btnReload').onclick = function(){ busy($('btnReload'), async function(){ await load(); toast('已刷新','ok'); }); };
+$('btnReload').onclick = function(){ busy($('btnReload'), async function(){
+  await load(true); toast('已刷新（'+HIST.length+' 条）','ok');
+}); };
 $('btnFilter').onclick = function(){ fi=(fi+1)%FILTERS.length; ONLY_OK=FILTERS[fi][1];
   $('btnFilter').textContent=FILTERS[fi][0]; render(); };
 
 bootPage({ title:'画廊', active:'gallery.html', onReady:function(){
-  load(); WBI.TIMER = setInterval(load, 25000);
+  load(); WBI.TIMER = setInterval(function(){ load(true); }, 30000);
 }});
 </script>
 </body>
