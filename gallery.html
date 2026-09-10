@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>wbi 画廊</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+  <h3>🖼 出图记录 <span class="tagx" id="cnt">—</span></h3>
+  <div class="row">
+    <button id="btnReload">🔄 刷新</button>
+    <button class="fx" id="btnFilter" style="width:auto">全部</button>
+  </div>
+  <div class="hint" id="last">加载中…</div>
+</div>
+
+<div class="card">
+  <div class="gal" id="gal"></div>
+  <div class="empty" id="empty" style="display:none">
+    还没有出图记录<br><br>
+    去【🎛 控制台】写提示词 → 点「⚡ 立即生图」
+  </div>
+</div>
+
+<div class="card">
+  <h3>📋 列表</h3>
+  <div class="list" id="list"><div class="it">加载中…</div></div>
+</div>
+
+<div id="toasts"></div>
+<script src="app.js"></script>
+<script>
+var HIST = [], ONLY_OK = false;
+var FILTERS = [['全部',false],['只看成功',true]]; var fi = 0;
+
+function raw(p){ return 'https://raw.githubusercontent.com/' + WBI.REPO + '/main/outputs/' + p; }
+
+function render(){
+  const rows = HIST.filter(function(x){ return !ONLY_OK || (x.ok && x.file); });
+  $('cnt').textContent = rows.length + ' 条';
+  const g = $('gal'), l = $('list');
+  if(!rows.length){ g.innerHTML=''; $('empty').style.display='block'; l.innerHTML='<div class="it">无记录</div>'; return; }
+  $('empty').style.display='none';
+  g.innerHTML = rows.filter(function(x){ return x.ok && x.file; }).slice(0,60).map(function(x){
+    return '<a href="' + raw(x.file) + '" target="_blank" title="' + (x.model||'') + '">' +
+           '<img loading="lazy" src="' + raw(x.file) + '"></a>';
+  }).join('') || '<div class="hint">无成功记录</div>';
+  l.innerHTML = rows.slice(0,80).map(function(x){
+    const t = x.ts ? new Date(x.ts*1000).toLocaleString('zh-CN') : '';
+    if(x.ok){
+      return '<div class="it"><span class="nm" title="' + (x.prompt||'').replace(/"/g,'') + '">' +
+        (x.model||'') + ' · ' + String(x.prompt||'').slice(0,26) + '</span>' +
+        '<span class="mt">' + Math.round((x.bytes||0)/1024) + 'KB<br>' + t.slice(5,16) + '</span>' +
+        '<a href="' + raw(x.file) + '" target="_blank"><button>看</button></a></div>';
+    }
+    return '<div class="it"><span class="nm" style="color:var(--err)">✕ ' + String(x.error||'').slice(0,44) + '</span>' +
+           '<span class="mt">' + t.slice(5,16) + '</span></div>';
+  }).join('');
+}
+
+async function load(){
+  if(!WBI.TOK){ $('last').textContent='请先连接令牌'; return; }
+  const h = await readFile('outputs/history.json');
+  try{ HIST = JSON.parse(h.text || '[]'); }catch(e){ HIST = []; }
+  const ok = HIST.filter(function(x){ return x.ok && x.file; });
+  if(ok[0]){
+    const t = new Date((ok[0].ts||0)*1000);
+    $('last').innerHTML = '最近一张：<b>' + ok[0].file + '</b>（' + Math.round((ok[0].bytes||0)/1024) +
+      ' KB，' + ok[0].source + '/' + ok[0].model + '，' + t.toLocaleString('zh-CN') + '）';
+  } else $('last').textContent = '还没有出图记录';
+  render();
+}
+
+$('btnReload').onclick = function(){ busy($('btnReload'), async function(){ await load(); toast('已刷新','ok'); }); };
+$('btnFilter').onclick = function(){ fi=(fi+1)%FILTERS.length; ONLY_OK=FILTERS[fi][1];
+  $('btnFilter').textContent=FILTERS[fi][0]; render(); };
+
+bootPage({ title:'画廊', active:'gallery.html', onReady:function(){
+  load(); WBI.TIMER = setInterval(load, 25000);
+}});
+</script>
+</body>
+</html>
