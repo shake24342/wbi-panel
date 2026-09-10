@@ -201,6 +201,27 @@ async function gh(path, opt={}){
   if(!r.ok) throw new Error((j&&(j.message||j.error))||('HTTP '+r.status));
   return j;
 }
+/* 清洗令牌：去掉所有空白与零宽字符（复制最常见的坑） */
+function cleanTok(raw){
+  return (raw||'')
+    .replace(/[\u200B-\u200D\u2060\uFEFF\u00A0]/g,'')  // 零宽/不换行空格
+    .replace(/[\s]+/g,'')                                    // 空格/换行/制表
+    .replace(/^["'`]+|["'`]+$/g,'');                          // 引号
+}
+function showTokInfo(){
+  const raw = $('tok').value, c = cleanTok(raw);
+  if(!c){ $('tokInfo').textContent=''; return; }
+  const ok = c.startsWith('ghp_') || c.startsWith('github_pat_');
+  const parts=[];
+  parts.push(`长度 ${c.length}`);
+  parts.push(ok? '格式 ✓' : '格式 ✗（应以 ghp_ 或 github_pat_ 开头）');
+  if(c !== raw) parts.push(`<span style="color:var(--warn)">已自动清理 ${raw.length-c.length} 个多余字符</span>`);
+  $('tokInfo').innerHTML = parts.join(' · ');
+  $('tokInfo').style.color = ok? 'var(--ok)':'var(--err)';
+}
+$('tok').addEventListener('input', showTokInfo);
+$('tok').addEventListener('paste', ()=> setTimeout(showTokInfo, 30));
+
 const enc = s => btoa(unescape(encodeURIComponent(s)));
 const dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
 
@@ -222,15 +243,28 @@ async function dispatch(wf, inputs){
 
 /* ---------- 连接 ---------- */
 $('btnConn').onclick = async ()=>{
-  REPO = $('repo').value.trim(); TOK = $('tok').value.trim();
+  REPO = $('repo').value.trim(); TOK = cleanTok($('tok').value);
+  $('tok').value = TOK;
+  showTokInfo();
   if(!REPO || !TOK){ msg('请填写仓库和令牌','err'); return; }
+  if(!(TOK.startsWith('ghp_')||TOK.startsWith('github_pat_'))){
+    msg('令牌格式不对：应以 ghp_ 或 github_pat_ 开头（当前长度 '+TOK.length+'）','err'); return; }
   msg('连接中…','');
   try{
     const u = await gh('/user');
     localStorage.setItem(LS_REPO, REPO); localStorage.setItem(LS_TOK, TOK);
     setConn(true); msg(`已连接：${u.login} → ${REPO}`,'ok');
     refreshAll(); if(TIMER) clearInterval(TIMER); TIMER = setInterval(refreshAll, 20000);
-  }catch(e){ setConn(false); msg('连接失败：'+e.message,'err'); }
+  }catch(e){
+    setConn(false);
+    if(/Bad credentials/i.test(e.message)){
+      msg('连接失败：Bad credentials —— 令牌无效或被撤销。请确认：① 完整复制无空格 ② 未过期 ③ 未撤销','err');
+    }else if(/Not Found/i.test(e.message)){
+      msg('连接失败：仓库读不到 —— 检查仓库名是否为 '+REPO+'，以及令牌是否有 repo 权限','err');
+    }else{
+      msg('连接失败：'+e.message,'err');
+    }
+  }
 };
 
 /* ---------- 会话 ---------- */
