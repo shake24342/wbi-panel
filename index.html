@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-page-node-id="7DTYLe03HFSNHDecC9ero9">
+<head data-page-node-id="aChrxUBwjABwQ9N8rLhkHX">
+<meta charset="utf-8" data-page-node-id="AbZp3xGtT0RMKvmFDBNOE6">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="655nufp8sPW8RQYCjwjlHI">
+<title>wbi 生图控制台</title>
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#161b22; --bg3:#1c2230; --bd:#2a3240;
+    --fg:#e6edf3; --fg2:#9aa7b4; --fg3:#6b7684;
+    --ac:#4c8dff; --ok:#3fb950; --warn:#d29922; --err:#f85149; --pk:#bc8cff;
+    --r:14px; --sh:0 6px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    padding:18px 16px 60px;max-width:1180px;margin:0 auto}
+  h1{font-size:19px;margin:0 0 4px;letter-spacing:.3px}
+  h1 span{color:var(--ac)}
+  .sub{color:var(--fg3);font-size:12.5px;margin-bottom:16px}
+  .card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--sh)}
+  .card h2{font-size:14px;margin:0 0 12px;display:flex;align-items:center;gap:8px;color:var(--fg);font-weight:600}
+  .card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--fg3);flex:none}
+  .card h2 .dot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(63,185,80,.15)}
+  .card h2 .dot.run{background:var(--warn);animation:pulse 1.2s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  label{font-size:12.5px;color:var(--fg2);flex:none}
+  input,select,textarea{background:var(--bg3);border:1px solid var(--bd);color:var(--fg);
+    border-radius:9px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none;min-width:0}
+  input:focus,select:focus,textarea:focus{border-color:var(--ac)}
+  input[type=text],input[type=password]{flex:1;min-width:150px}
+  textarea{width:100%;min-height:74px;resize:vertical}
+  button{background:var(--bg3);border:1px solid var(--bd);color:var(--fg);border-radius:9px;
+    padding:9px 16px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:.15s}
+  button:hover:not(:disabled){border-color:var(--ac);color:#fff}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+  button.pri:hover:not(:disabled){filter:brightness(1.12)}
+  button.ok{background:var(--ok);border-color:var(--ok);color:#04120a}
+  button.dg{background:transparent;border-color:var(--err);color:var(--err)}
+  button.dg:hover:not(:disabled){background:var(--err);color:#fff}
+  .tag{font-size:11.5px;padding:2.5px 8px;border-radius:20px;background:var(--bg3);color:var(--fg2);border:1px solid var(--bd)}
+  .tag.ok{color:var(--ok);border-color:rgba(63,185,80,.4)}
+  .tag.err{color:var(--err);border-color:rgba(248,81,73,.4)}
+  .tag.warn{color:var(--warn);border-color:rgba(210,153,34,.4)}
+  .grid{display:grid;gap:10px}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(135px,1fr))}
+  .kv{background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:11px 12px}
+  .kv .k{font-size:11.5px;color:var(--fg3);margin-bottom:3px}
+  .kv .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+  .list{max-height:330px;overflow:auto;border:1px solid var(--bd);border-radius:10px}
+  .it{display:flex;gap:9px;align-items:center;padding:8px 11px;border-bottom:1px solid var(--bd);font-size:12.5px}
+  .it:last-child{border-bottom:0}
+  .it:hover{background:var(--bg3)}
+  .it .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .it .mt{color:var(--fg3);font-size:11.5px;flex:none}
+  .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:9px}
+  .gal a{display:block;border-radius:10px;overflow:hidden;border:1px solid var(--bd);background:var(--bg3);aspect-ratio:3/4}
+  .gal img{width:100%;height:100%;object-fit:cover;display:block}
+  .log{background:#080b10;border:1px solid var(--bd);border-radius:10px;padding:11px;
+    font:11.5px/1.55 ui-monospace,Menlo,Consolas,monospace;color:var(--fg2);
+    max-height:260px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+  .hint{font-size:11.5px;color:var(--fg3);margin-top:7px;line-height:1.55}
+  .bar{height:7px;background:var(--bg3);border-radius:20px;overflow:hidden;margin-top:9px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--pk));width:0;transition:width .5s}
+  .flex1{flex:1}
+  details summary{cursor:pointer;color:var(--fg2);font-size:12.5px;padding:4px 0}
+  code{background:var(--bg3);padding:1px 6px;border-radius:5px;font-size:12px}
+</style>
+</head>
+<body data-page-node-id="1W5of5qzz45d6Bh6wMtK2V">
+
+<h1 data-page-node-id="GLjqB04tos5kG0RH2eXyiJ">wbi <span data-page-node-id="2GxFuvTsBeV4JMGKpuySEk">生图控制台</span></h1>
+<div class="sub" data-page-node-id="BApbNKCE7zZwU4HyCoUthA">空壳前端：输入 GitHub 令牌后，才可控制云端会话（开始 / 续期 / 停止 / 生图）。所有计算都在云端 Actions 完成，本机无需开机。</div>
+
+<!-- 1. 连接 -->
+<div class="card" data-page-node-id="VoBsAgV8evxpeQU8SnvhWM">
+  <h2 data-page-node-id="AtzZBkWq1uB2XcbgUjwoqU"><i class="dot" id="connDot" data-page-node-id="ADzd4KTuO0XxaIp8DHrqTE"></i>① 连接仓库</h2>
+  <div class="row" data-page-node-id="vrwuymRwZw5hyMvfy3iQKE">
+    <label data-page-node-id="C1HlNU3NYEpXDgFHbhyYVx">仓库</label>
+    <input type="text" id="repo" placeholder="owner/repo" value="shake24342/wbi-image-api" data-page-node-id="ZJLc20B9zP0CDcxuAG27qe">
+  </div>
+  <div class="row" style="margin-top:10px" data-page-node-id="aSHAVEXqP7yZBcO9L56oXo">
+    <label data-page-node-id="79Pw5u7u1naMdE93F9fGpb">令牌</label>
+    <input type="password" id="tok" placeholder="GitHub PAT（需 repo + workflow 权限）" data-page-node-id="wbIqOkmvgryxtepoH7VpBN">
+    <button class="pri" id="btnConn" data-page-node-id="5XjZTggaefOsldgnBRJTQh">连接</button>
+    <button id="btnForget" data-page-node-id="JuFJ2sjZPQGbszb2SjGBvp">清除</button>
+  </div>
+  <div class="hint" id="connMsg" data-page-node-id="RtguQ9To9Rb4uVj7U7Gt0W">令牌只存在你本机浏览器（localStorage），不会上传到任何第三方。建议用 fine-grained token，仅授权本仓库的 <code data-page-node-id="mWSWmuQbcpoBkUx0Ur8zsE">Contents: RW</code> + <code data-page-node-id="ij6boOEr9ysJKmX0diE4ko">Actions: RW</code>。</div>
+</div>
+
+<!-- 2. 会话控制 -->
+<div class="card" data-page-node-id="upk3T0l9mWAbQGpB5VaQuo">
+  <h2 data-page-node-id="8FewB5dZy6fWPUFEtix0Ut"><i class="dot" id="sessDot" data-page-node-id="oMWnzkVWCniDvQ9eDE78Tw"></i>② 云端会话（点开始 → 跑起来；不续期 → 几分钟后自动关闭）</h2>
+  <div class="row" data-page-node-id="D4OPab7WFkSmu6VLz5AZxs">
+    <label data-page-node-id="CDxy5WIE5lPE6kaBZnEENe">时长</label>
+    <select id="minutes" data-page-node-id="KwzOPyUOEDUAuFRr6y8q5G">
+      <option value="5" data-page-node-id="kNWgkvDGc3xeYZM3noKwCv">5 分钟</option>
+      <option value="15" selected data-page-node-id="EcdLrVrYZ0As8HGbfGbc8M">15 分钟</option>
+      <option value="30" data-page-node-id="EPFPgCbQrliiTSWoPBEfm0">30 分钟</option>
+      <option value="60" data-page-node-id="3vh2vzDrI95u3vZXMaawKb">1 小时</option>
+      <option value="180" data-page-node-id="UcQmux6sEWYAUXfuMRe2Ty">3 小时</option>
+    </select>
+    <label data-page-node-id="Qs195yx2w5FglCiN3HX6ZV">模式</label>
+    <select id="mode" data-page-node-id="ie5lEhDf4cEZqlKtqJf0MB">
+      <option value="mixed" selected data-page-node-id="6gZEbABQZzwO35vOREXGJd">混合（巡检 + 生图队列）</option>
+      <option value="checkin" data-page-node-id="sBnGW4dEb6ClQYuPLGt5yO">只巡检号池</option>
+      <option value="generate" data-page-node-id="4AeGwFNzY4W3UeZpTXWyih">只跑生图队列</option>
+    </select>
+    <button class="ok" id="btnStart" data-page-node-id="ZA2c67snQQWr3gnjtB8vBv">▶ 开始运行</button>
+    <button class="pri" id="btnRenew" data-page-node-id="QGOL9OhsNYYWRa9Phfetyp">⏱ 续期 +15 分</button>
+    <button class="dg" id="btnStop" data-page-node-id="1VomGHQb3eduQEjzSvoen6">■ 停止</button>
+    <button id="btnCancelRun" data-page-node-id="zcyWGGtfbNJ9WDBU4kd3NF">取消云端 run</button>
+  </div>
+  <div class="bar" data-page-node-id="B0eHrK5MOpvNdXH6yNh3Aw"><i id="bar" data-page-node-id="EIDvEGmzFBwBzyptc3YPMn"></i></div>
+  <div class="grid g3" style="margin-top:12px" data-page-node-id="H6mVCaUo4mLhiHyq17j4hC">
+    <div class="kv" data-page-node-id="67v8Zex3kBPD2QpCEuR2HJ"><div class="k" data-page-node-id="yiQ6Th8wOIZ4Gf93Ww23ul">会话状态</div><div class="v" id="stState" data-page-node-id="Yf6HkwprQv95U6nVqRmDJl">—</div></div>
+    <div class="kv" data-page-node-id="n9EKT0ayjKtqoPe0qRci5p"><div class="k" data-page-node-id="BTSBjgTwlpccFB873frnZg">剩余时间</div><div class="v" id="stLeft" data-page-node-id="kthSR9WC5dcNA4yplgb7og">—</div></div>
+    <div class="kv" data-page-node-id="P258XzMMBfJ935sA2l4Kwe"><div class="k" data-page-node-id="q8G0i6EKCN2YW2873JpCI7">已跑轮次</div><div class="v" id="stRounds" data-page-node-id="9dyfh5tEYM16ChZQdmHBkD">—</div></div>
+    <div class="kv" data-page-node-id="MxFg0zsluFvdFnPsuorK5i"><div class="k" data-page-node-id="tmpXcqasTTnFkOVOc6FeAB">云端 Run</div><div class="v" id="stRun" style="font-size:13px" data-page-node-id="TJrSynEKELYuTASAIVBpPX">—</div></div>
+  </div>
+  <div class="hint" data-page-node-id="6nUl6AJghUiYHojxbxfqWv">「开始」= 触发云端 <code data-page-node-id="d7ySmPnhKHaNm3966N4uyG">wbi-session</code> 工作流；「续期」= 改写 <code data-page-node-id="shqiLpzLxilyiwPZNNwOwp">data/session_renew.json</code> 的过期时间；**到点未续期，云端进程自动退出**（省 Actions 分钟）。</div>
+</div>
+
+<!-- 3. 生图 -->
+<div class="card" data-page-node-id="FY3rwwAuQEqhCdTdPVRwHi">
+  <h2 data-page-node-id="dJiOlGpi2gZtHug7k6lSIq"><i class="dot" data-page-node-id="73e6Wg2fFo318joDtcIsaC"></i>③ 生图</h2>
+  <div class="row" data-page-node-id="g71bR0yVEuFmLkzeNRK0SE">
+    <label data-page-node-id="5Fw4rmtkgBjMeiIHZNYX6s">模型</label>
+    <select id="model" style="flex:1;min-width:200px" data-page-node-id="IS9tVQYfhPykd2yARbncsh"></select>
+    <label data-page-node-id="HL5JrlqhLbcyq1wQgyl1Im">尺寸</label>
+    <select id="dim" data-page-node-id="JzFoDpxFq1ZBsa8a3WXMtJ">
+      <option data-page-node-id="qmxUy3i35nKf3oXio0ntod">3:4</option><option data-page-node-id="OOYiuFAcOS5aEfZfSafqcr">1:1</option><option data-page-node-id="1psrqSi520Ef8qxEwGFkDe">2:3</option><option data-page-node-id="yVJT2LzjqZCcGLBEfS0Cm9">4:3</option>
+      <option data-page-node-id="mBXJGT9BXzn9GJZihePE3U">3:2</option><option data-page-node-id="O2IrEnRqTu0RskeG0X4P5U">16:9</option><option data-page-node-id="YhDcjb2A03YTqjgpKMw6GW">9:16</option>
+    </select>
+    <label data-page-node-id="1K2I99KCK5HKPDyZ8q8OHi">张数</label>
+    <select id="count" data-page-node-id="NVPDBEHdaPeOby6jWwYZLI"><option data-page-node-id="liaZeYKQg7D2RGrIAkZDGK">1</option><option data-page-node-id="2owVCe0B7kVvymewhMh9UI">2</option><option data-page-node-id="jo15FGbBOI2zIpkkfvqnas">3</option><option data-page-node-id="leorbI7PF4dkPSdVVwbfB6">4</option></select>
+  </div>
+  <textarea id="prompt" style="margin-top:10px" placeholder="提示词，例如：1girl, solo, kimono, shrine, autumn leaves, masterpiece, best quality"></textarea>
+  <div class="row" style="margin-top:10px" data-page-node-id="wBiXo1NwNmLVpTB6hi2W3T">
+    <button class="pri" id="btnQueue" data-page-node-id="khJepWObXEF4lKDLFYFv9a">＋ 加入队列（云端会话去跑）</button>
+    <button id="btnNow" data-page-node-id="221BBK8XbzwGGQsoltw5yz">⚡ 立即生图（单开一次 run）</button>
+    <span class="tag" id="queueTag" data-page-node-id="zosdt32PzfI7kQkMA47mWM">队列 —</span>
+  </div>
+  <div class="hint" data-page-node-id="SlygLjCuHd39ciktGlfKdZ">「加入队列」写入 <code data-page-node-id="lFtCjgjl10oZjOtSbHFGTm">data/queue.json</code>，会话跑着时每隔几分钟取一条执行；「立即生图」直接触发 <code data-page-node-id="gdLOeNNrjuVuwgdRFmf4AR">wbi-generate</code>（不依赖会话）。</div>
+</div>
+
+<!-- 4. 模型清单 -->
+<div class="card" data-page-node-id="NeW6aTtoACEI51Cu9EEMsy">
+  <h2 data-page-node-id="Q4Of3i9uC6fcep9igFAPe7"><i class="dot" data-page-node-id="oTCN0KapMlIBeJ3kyDTqtm"></i>④ 全部模型 <span class="tag" id="mCnt" data-page-node-id="zslcyO2pHEGkOfPLe7bi33">—</span></h2>
+  <div class="row" data-page-node-id="sZqCEC7glsE2RxBgfdlArZ">
+    <input type="text" id="mSearch" placeholder="搜索模型名（如 realvis / tsubaki / 写实）" data-page-node-id="BovVDarowGyt7W6GIETr77">
+    <select id="mSource" data-page-node-id="FC39Mu0iMIXDaYinKPnfuy"><option value="" data-page-node-id="OuQ0aZqvzBSONgLmY16VFU">全部来源</option><option value="dzmm" data-page-node-id="SDMArocTVZsXxqJKshar5B">dzmm</option><option value="pixai" data-page-node-id="Y5BEbQqRCLRDQMrAmRzyv3">PixAI</option></select>
+    <select id="mType" data-page-node-id="DwbTzTUcKdi7C6ZzYWHDKw"><option value="" data-page-node-id="QWd3q0EPmPglCkjq3ua8oZ">全部类型</option></select>
+  </div>
+  <div class="list" id="mList" style="margin-top:10px" data-page-node-id="Fksg0UDQgSTVFNm04PSRux"><div class="it" data-page-node-id="HrVQkH4vcOFHqSJmeGheiI">填令牌后点「连接」，再点「加载全部模型」</div></div>
+  <div class="row" style="margin-top:10px" data-page-node-id="YPty0GpECCd7ReMFaUJh2G">
+    <button id="btnLoadModels" data-page-node-id="AWSJydTKhjsExVEb7WSyj2">加载全部模型（PixAI 1.85 万 + dzmm 7）</button>
+  </div>
+</div>
+
+<!-- 5. 号池 + 产出 -->
+<div class="card" data-page-node-id="htlH9wnCeXIABywbWHcXaN">
+  <h2 data-page-node-id="oYNIHf5hjwOQSqY0PafdQR"><i class="dot" data-page-node-id="sIwiw1Cvb0u7g2ZFAOqc9l"></i>⑤ 号池状态 &amp; 最近产出</h2>
+  <div class="grid g3" data-page-node-id="wu5ZBv7dSiHanwn0WbxJ1q">
+    <div class="kv" data-page-node-id="26K3p2DnhYg17mYG4y4KyC"><div class="k" data-page-node-id="nIiyJUYkE7tqvHa2lg2Jl4">dzmm 可用号</div><div class="v" id="pDzmm" data-page-node-id="yXkl1IvyQNKIwelZCxMWFC">—</div></div>
+    <div class="kv" data-page-node-id="lJNe1cw4f5inCWGFHXMPAc"><div class="k" data-page-node-id="VeLLGzHZa8kOI3OsJ4bJCZ">PixAI 可用号</div><div class="v" id="pPixai" data-page-node-id="W2bVs4YPnOHivlnM63ET6s">—</div></div>
+    <div class="kv" data-page-node-id="RzWzOfrOrCoUcxLPyLriqG"><div class="k" data-page-node-id="xiT4cFBMka6r3kG0OeBUWS">最近产出</div><div class="v" id="pOut" data-page-node-id="DFE2O2sz3xFqlnzkNWYGwj">—</div></div>
+  </div>
+  <div class="gal" id="gal" style="margin-top:12px" data-page-node-id="Xqu0vPdt0TWm0zEXu6C5Db"></div>
+  <details style="margin-top:10px" data-page-node-id="TXobdpz0eW06BDRwYgQH4s">
+    <summary data-page-node-id="DF8Doqstm8gv4u17DJYE9e">运行日志（最近一次 session run）</summary>
+    <div class="log" id="log" data-page-node-id="AC59HrtbASPwAbqioA1lFZ">—</div>
+  </details>
+</div>
+
+<script>
+const LS_REPO='wbi.repo', LS_TOK='wbi.tok';
+const $=id=>document.getElementById(id);
+const API='https://api.github.com';
+let REPO='', TOK='', MODELS=[], RUNS=[], TIMER=null;
+
+/* ---------- 存储 ---------- */
+$('repo').value = localStorage.getItem(LS_REPO) || 'shake24342/wbi-image-api';
+$('tok').value  = localStorage.getItem(LS_TOK) || '';
+$('btnForget').onclick = ()=>{ localStorage.removeItem(LS_TOK); $('tok').value=''; msg('已清除令牌',''); setConn(false); };
+
+function msg(t, cls){ const e=$('connMsg'); e.textContent=t; e.style.color = cls==='ok'?'var(--ok)':cls==='err'?'var(--err)':'var(--fg3)'; }
+function setConn(on){ const d=$('connDot'); d.className='dot'+(on?' on':''); }
+
+/* ---------- GitHub API ---------- */
+async function gh(path, opt={}){
+  const r = await fetch(API+path, {
+    ...opt,
+    headers:{ 'Authorization':'token '+TOK, 'Accept':'application/vnd.github+json',
+              'Content-Type':'application/json', ...(opt.headers||{}) }
+  });
+  const txt = await r.text();
+  let j=null; try{ j = txt?JSON.parse(txt):null; }catch(e){ j={_raw:txt}; }
+  if(!r.ok) throw new Error((j&&(j.message||j.error))||('HTTP '+r.status));
+  return j;
+}
+const enc = s => btoa(unescape(encodeURIComponent(s)));
+const dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
+
+async function readFile(p){
+  try{ const j = await gh(`/repos/${REPO}/contents/${p}?t=${Date.now()}`);
+       return { sha:j.sha, text: dec(j.content) }; }
+  catch(e){ return { sha:null, text:null }; }
+}
+async function writeFile(p, obj, message){
+  const cur = await readFile(p);
+  const body = { message: message||('update '+p), content: enc(typeof obj==='string'?obj:JSON.stringify(obj,null,1)) };
+  if(cur.sha) body.sha = cur.sha;
+  return gh(`/repos/${REPO}/contents/${p}`, { method:'PUT', body: JSON.stringify(body) });
+}
+async function dispatch(wf, inputs){
+  return gh(`/repos/${REPO}/actions/workflows/${wf}/dispatches`,
+            { method:'POST', body: JSON.stringify({ ref:'main', inputs: inputs||{} }) });
+}
+
+/* ---------- 连接 ---------- */
+$('btnConn').onclick = async ()=>{
+  REPO = $('repo').value.trim(); TOK = $('tok').value.trim();
+  if(!REPO || !TOK){ msg('请填写仓库和令牌','err'); return; }
+  msg('连接中…','');
+  try{
+    const u = await gh('/user');
+    localStorage.setItem(LS_REPO, REPO); localStorage.setItem(LS_TOK, TOK);
+    setConn(true); msg(`已连接：${u.login} → ${REPO}`,'ok');
+    refreshAll(); if(TIMER) clearInterval(TIMER); TIMER = setInterval(refreshAll, 20000);
+  }catch(e){ setConn(false); msg('连接失败：'+e.message,'err'); }
+};
+
+/* ---------- 会话 ---------- */
+$('btnStart').onclick = async ()=>{
+  try{
+    await writeFile('data/session_renew.json', {expiresAt: Math.floor(Date.now()/1000)+ (+$('minutes').value)*60, mode:$('mode').value, stop:false}, 'session: renew by panel');
+    await dispatch('session.yml', { minutes: $('minutes').value, mode: $('mode').value });
+    msg('已触发云端会话（'+$('minutes').value+' 分钟）','ok'); refreshAll();
+  }catch(e){ msg('触发失败：'+e.message,'err'); }
+};
+$('btnRenew').onclick = async ()=>{
+  try{ await writeFile('data/session_renew.json', {expiresAt: Math.floor(Date.now()/1000)+15*60, mode:$('mode').value, stop:false}, 'session: +15min');
+       msg('已续期 +15 分钟','ok'); refreshAll(); }
+  catch(e){ msg('续期失败：'+e.message,'err'); }
+};
+$('btnStop').onclick = async ()=>{
+  try{ await writeFile('data/session_renew.json', {expiresAt: 0, stop:true}, 'session: stop by panel');
+       msg('已发送停止信号（云端下一轮退出）','ok'); refreshAll(); }
+  catch(e){ msg('停止失败：'+e.message,'err'); }
+};
+$('btnCancelRun').onclick = async ()=>{
+  try{
+    const r = await gh(`/repos/${REPO}/actions/workflows/session.yml/runs?per_page=1`);
+    const run = r.workflow_runs && r.workflow_runs[0];
+    if(!run) return msg('没有找到 run','err');
+    await gh(`/repos/${REPO}/actions/runs/${run.id}/cancel`, {method:'POST'});
+    msg('已取消云端 run #'+run.run_number,'ok'); refreshAll();
+  }catch(e){ msg('取消失败：'+e.message,'err'); }
+};
+
+/* ---------- 生图 ---------- */
+$('btnQueue').onclick = async ()=>{
+  const p=$('prompt').value.trim(); if(!p) return msg('请填提示词','err');
+  try{
+    const cur = await readFile('data/queue.json');
+    let q=[]; try{ q = JSON.parse(cur.text||'[]'); }catch(e){ q=[]; }
+    q.push({ id:'p'+Date.now(), prompt:p, model:$('model').value, dim:$('dim').value, ts:Math.floor(Date.now()/1000) });
+    await writeFile('data/queue.json', q, 'queue: add job');
+    msg('已加入队列（共 '+q.length+' 条）','ok'); refreshQueue();
+  }catch(e){ msg('入队失败：'+e.message,'err'); }
+};
+$('btnNow').onclick = async ()=>{
+  const p=$('prompt').value.trim(); if(!p) return msg('请填提示词','err');
+  const m=$('model').value; const src = m.startsWith('pixai:')?'pixai':'auto';
+  try{
+    await dispatch('generate.yml', { prompt:p, model:m, dim:$('dim').value, count:$('count').value });
+    msg('已触发云端生图（model='+m+'）','ok'); refreshAll();
+  }catch(e){ msg('触发失败：'+e.message,'err'); }
+};
+
+/* ---------- 模型清单 ---------- */
+const DZMM=[['anime','二次元（默认，5 credit）'],['anima','anima'],['iroha','Iroha 高质量二次元'],
+  ['z-image','z-image（隐藏）'],['nalang-dream','Nalang Dream 写实 · 无审核（5 credit）'],
+  ['nalang-coser-2','Nalang Coser-2'],['kagami','kagami 写实最高清（仅 1 credit，有敏感词过滤）']];
+const PIXAI_FIX=[['pixai:tsubaki2','PixAI Tsubaki.2（26B 旗舰）'],['pixai:tsubaki','PixAI Tsubaki（7B）'],
+  ['pixai:realvisxl','PixAI RealVisXL V4.0（写实）'],['pixai:cyberrealistic','PixAI CyberRealistic Pony'],
+  ['pixai:jibmix','PixAI Jib Mix Realistic XL'],['pixai:nova-unreal','PixAI Nova Unreal XL'],
+  ['pixai:analog-madness','PixAI Analog Madness'],['pixai:epicrealism','PixAI epiCRealism XL']];
+function fillModelSel(){
+  const s=$('model'); s.innerHTML='';
+  const g0=document.createElement('option'); g0.value='auto'; g0.textContent='auto（自动选源）'; s.appendChild(g0);
+  const g1=document.createElement('optgroup'); g1.label='dzmm（无审核 · 75 张/号/天）';
+  DZMM.forEach(([v,t])=>{ const o=document.createElement('option'); o.value='dzmm:'+v; o.textContent=t; g1.appendChild(o); });
+  s.appendChild(g1);
+  const g2=document.createElement('optgroup'); g2.label='PixAI 精选（需绕审核）';
+  PIXAI_FIX.forEach(([v,t])=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; g2.appendChild(o); });
+  s.appendChild(g2);
+}
+fillModelSel();
+
+$('btnLoadModels').onclick = async ()=>{
+  if(!TOK) return msg('先连接令牌','err');
+  $('mList').innerHTML='<div class="it">加载中…</div>';
+  const rows=[];
+  DZMM.forEach(([v,t])=>rows.push({id:'dzmm:'+v,t:'dzmm / '+t,src:'dzmm',y:'base',v}));
+  PIXAI_FIX.forEach(([v,t])=>rows.push({id:v,t,src:'pixai',y:'base',v}));
+  try{
+    const f = await readFile('docs/pixai_models_index.json');
+    if(f.text){ JSON.parse(f.text).forEach(m=>rows.push({id:'pixai:'+m.t+'#'+m.v,t:m.t,src:'pixai',y:m.y,v:m.v,cat:m.c})); }
+  }catch(e){}
+  MODELS = rows;
+  const types=[...new Set(rows.map(r=>r.y))].filter(Boolean).sort();
+  $('mType').innerHTML='<option value="">全部类型</option>'+types.map(t=>`<option>${t}</option>`).join('');
+  $('mCnt').textContent = rows.length.toLocaleString()+' 个';
+  renderModels();
+  msg('已加载 '+rows.length+' 个模型','ok');
+};
+function renderModels(){
+  const kw=($('mSearch').value||'').toLowerCase(), src=$('mSource').value, ty=$('mType').value;
+  let r = MODELS.filter(m=> (!src||m.src===src) && (!ty||m.y===ty) && (!kw||m.t.toLowerCase().includes(kw)) );
+  const head = r.slice(0,400);
+  $('mList').innerHTML = head.map(m=>
+    `<div class="it"><span class="nm">${m.t}</span><span class="mt">${m.src}${m.y?' · '+m.y:''}</span>
+     <button style="padding:3px 10px;font-size:11.5px" onclick="useModel('${m.id}')">用</button></div>`).join('')
+    || '<div class="it">无匹配</div>';
+  if(r.length>head.length) $('mList').insertAdjacentHTML('beforeend', `<div class="it" style="color:var(--fg3)">…还有 ${r.length-head.length} 个，请用搜索缩小范围</div>`);
+}
+['mSearch','mSource','mType'].forEach(id=>$(id).oninput=$(id).onchange=renderModels);
+window.useModel = id=>{
+  const s=$('model'); const o=[...s.options].find(x=>x.value===id);
+  if(o){ s.value=id; } else { const n=document.createElement('option'); n.value=id; n.textContent=id; s.appendChild(n); s.value=id; }
+  $('prompt').focus(); msg('已选模型：'+id,'ok');
+};
+
+/* ---------- 刷新 ---------- */
+async function refreshQueue(){
+  const q = await readFile('data/queue.json');
+  let n=0; try{ n=(JSON.parse(q.text||'[]')).length; }catch(e){}
+  $('queueTag').textContent='队列 '+n+' 条';
+}
+async function refreshAll(){
+  if(!TOK) return;
+  // 会话状态
+  try{
+    const s = await readFile('data/session_status.json');
+    const r = await readFile('data/session_renew.json');
+    const sess = await readFile('data/session.json');
+    let st={}, re={}, se={};
+    try{ st=JSON.parse(s.text||'{}'); }catch(e){}
+    try{ re=JSON.parse(r.text||'{}'); }catch(e){}
+    try{ se=JSON.parse(sess.text||'{}'); }catch(e){}
+    const exp = Math.max(re.expiresAt||0, se.expiresAt||0);
+    const left = exp - Math.floor(Date.now()/1000);
+    $('stState').textContent = re.stop ? '已停止' : (left>0?'运行中':'已到期');
+    $('stState').style.color = re.stop?'var(--err)':(left>0?'var(--ok)':'var(--fg3)');
+    $('stLeft').textContent = left>0 ? Math.floor(left/60)+' 分 '+(left%60)+' 秒' : '—';
+    $('stRounds').textContent = st.rounds ?? '—';
+    const total = Math.max(1,(se.expiresAt||exp)-((se.startedAt)||exp-900));
+    $('bar').style.width = Math.max(0,Math.min(100, left>0? left/total*100:0))+'%';
+  }catch(e){}
+  // run 状态
+  try{
+    const r = await gh(`/repos/${REPO}/actions/runs?per_page=5`);
+    RUNS = r.workflow_runs||[];
+    const s = RUNS.find(x=>x.path&&x.path.includes('session.yml')) || RUNS[0];
+    if(s){ $('stRun').innerHTML = `${s.status}${s.conclusion?' / '+s.conclusion:''} <span class="tag">#${s.run_number}</span>`;
+           $('sessDot').className='dot'+(s.status==='in_progress'?' run':''); }
+  }catch(e){}
+  // 号池
+  try{
+    const d = await readFile('data/dzmm_accounts.json');
+    let n=0; try{ n=(JSON.parse(d.text||'[]')).length; }catch(e){}
+    $('pDzmm').textContent = n? n+' 个' : '—';
+  }catch(e){}
+  try{
+    const p = await readFile('data/pixai_pool.json');
+    let arr=[]; try{ arr=JSON.parse(p.text||'[]'); }catch(e){}
+    const alive=arr.filter(x=>!x.dead).length;
+    $('pPixai').textContent = arr.length? alive+' / '+arr.length : '—';
+  }catch(e){}
+  // 产出
+  try{
+    const h = await readFile('outputs/history.json');
+    let hist=[]; try{ hist=JSON.parse(h.text||'[]'); }catch(e){}
+    $('pOut').textContent = hist.length? hist.length+' 张' : '—';
+    $('gal').innerHTML = hist.filter(x=>x.ok&&x.file).slice(0,12).map(x=>
+      `<a href="https://raw.githubusercontent.com/${REPO}/main/outputs/${x.file}" target="_blank" title="${x.model} · ${x.prompt||''}">
+        <img loading="lazy" src="https://raw.githubusercontent.com/${REPO}/main/outputs/${x.file}" alt=""></a>`).join('');
+  }catch(e){}
+  refreshQueue();
+  // 日志
+  try{
+    const s = RUNS.find(x=>x.path&&x.path.includes('session.yml'));
+    if(s && $('log').textContent==='—'){
+      const j = await gh(`/repos/${REPO}/actions/runs/${s.id}/jobs`);
+      const job = (j.jobs||[])[0];
+      if(job){
+        const t = await fetch(`${API}/repos/${REPO}/actions/jobs/${job.id}/logs`, {headers:{Authorization:'token '+TOK}});
+        const txt = await t.text();
+        $('log').textContent = txt.split('\n').slice(-120).join('\n');
+      }
+    }
+  }catch(e){}
+}
+
+/* ---------- 自动连接 ---------- */
+if($('tok').value){ $('btnConn').click(); }
+</script>
+</body>
+</html>
