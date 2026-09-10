@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>wbi 模型</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+  <h3>🧩 全部模型 <span class="tagx" id="mCnt">—</span></h3>
+  <input type="text" id="mSearch" placeholder="搜索，如 realvis / tsubaki / 写实">
+  <div class="g2" style="margin-top:9px">
+    <select id="mSource"><option value="">全部来源</option><option value="dzmm">dzmm</option><option value="pixai">PixAI</option></select>
+    <select id="mType"><option value="">全部类型</option></select>
+  </div>
+  <button id="btnLoad" style="margin-top:9px">加载全部模型（含 PixAI 1.85 万）</button>
+  <div class="hint">点了「用」会记下模型 → 回【🎛 控制台】直接生图。</div>
+</div>
+
+<div class="card">
+  <div class="list" id="mList"><div class="it">点上面按钮加载</div></div>
+</div>
+
+<div id="toasts"></div>
+<script src="app.js"></script>
+<script>
+var MODELS=[], PICKED = localStorage.getItem('wbi.picked') || 'auto';
+
+function fillBase(){
+  const rows=[];
+  DZMM_MODELS.forEach(function(x){ rows.push({id:'dzmm:'+x[0],t:'dzmm '+x[1],src:'dzmm',y:'base'}); });
+  PIXAI_MODELS.forEach(function(x){ rows.push({id:x[0],t:'PixAI '+x[1],src:'pixai',y:'base'}); });
+  return rows;
+}
+function types(){
+  var ts=[]; MODELS.forEach(function(r){ if(r.y && ts.indexOf(r.y)<0) ts.push(r.y); }); ts.sort();
+  $('mType').innerHTML='<option value="">全部类型</option>'+ts.map(function(t){return '<option>'+t+'</option>'}).join('');
+}
+function render(){
+  const kw=($('mSearch').value||'').toLowerCase(), src=$('mSource').value, ty=$('mType').value;
+  const r=MODELS.filter(function(m){ return (!src||m.src===src)&&(!ty||m.y===ty)&&(!kw||m.t.toLowerCase().indexOf(kw)>=0); });
+  const head=r.slice(0,400);
+  $('mList').innerHTML = head.length ? head.map(function(m){
+    const on = m.id===PICKED ? ' style="color:var(--ok)"' : '';
+    return '<div class="it"><span class="nm"'+on+'>'+m.t+'</span><span class="mt">'+m.src+
+      ((m.y&&m.y!=='base')?' · '+m.y:'')+'</span><button onclick="pick(\''+m.id+'\')">用</button></div>';
+  }).join('') : '<div class="it">无匹配</div>';
+  if(r.length>head.length) $('mList').insertAdjacentHTML('beforeend',
+    '<div class="it" style="color:var(--fg3)">…还有 '+(r.length-head.length)+' 个，用搜索缩小范围</div>');
+}
+window.pick=function(id){
+  PICKED=id; localStorage.setItem('wbi.picked',id);
+  toast('已选模型：'+id+'\n回【🎛 控制台】直接生图','ok',5000); render();
+};
+
+$('btnLoad').onclick=function(){ busy($('btnLoad'),async function(){
+  let rows=fillBase();
+  try{ const f=await readFile('docs/pixai_models_index.json');
+       if(f.text) JSON.parse(f.text).forEach(function(m){ rows.push({id:'pixai:'+m.t+'#'+m.v,t:m.t,src:'pixai',y:m.y}); });
+  }catch(e){ toast('PixAI 索引读取失败，仅加载精选','warn'); }
+  MODELS=rows; types(); $('mCnt').textContent=rows.length.toLocaleString()+' 个'; render();
+  toast('已加载 '+rows.length+' 个模型','ok');
+}); };
+['mSearch','mSource','mType'].forEach(function(i){ $(i).oninput=render; $(i).onchange=render; });
+
+bootPage({ title:'模型', active:'models.html', onReady:function(){
+  MODELS = fillBase(); types(); render(); $('mCnt').textContent = MODELS.length + ' 个（精选）';
+}});
+</script>
+</body>
+</html>
