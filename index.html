@@ -358,6 +358,13 @@ async function refreshAll(){
     $('stState').style.color = re.stop?'var(--err)':(left>0?'var(--ok)':'var(--fg3)');
     $('stLeft').textContent = left>0 ? Math.floor(left/60)+' 分 '+(left%60)+' 秒' : '—';
     $('stRounds').textContent = st.rounds ?? '—';
+    const w = st.waf;
+    if(w){
+      const bad = (w.wafStreak>0)||w.circuitOpen;
+      $('stWaf').innerHTML = (w.circuitOpen? '熔断中 '+w.circuitLeftSec+'s' : (w.pausedSec>0? '退避 '+w.pausedSec+'s' : '正常'))
+        + ` <span class="tag">连击 ${w.wafStreak||0}</span> <span class="tag">并发 ${w.busy||0}/${w.maxConcurrent||4}</span>`;
+      $('stWaf').style.color = bad?'var(--warn)':'var(--ok)';
+    }
     const total = Math.max(1,(se.expiresAt||exp)-((se.startedAt)||exp-900));
     $('bar').style.width = Math.max(0,Math.min(100, left>0? left/total*100:0))+'%';
   }catch(e){}
