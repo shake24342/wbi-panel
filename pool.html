@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>wbi 号池</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+  <h3>📊 号池状态</h3>
+  <div class="g3">
+    <div class="stat"><div class="k">dzmm</div><div class="v" id="dz">—</div></div>
+    <div class="stat"><div class="k">PixAI</div><div class="v" id="px">—</div></div>
+    <div class="stat"><div class="k">风控</div><div class="v" id="waf" style="font-size:13px">—</div></div>
+  </div>
+  <div class="g2" style="margin-top:9px">
+    <div class="stat"><div class="k">dzmm 日产能</div><div class="v" id="dzq">—</div></div>
+    <div class="stat"><div class="k">PixAI quota</div><div class="v" id="pxq">—</div></div>
+  </div>
+  <div class="hint" id="pinfo">—</div>
+</div>
+
+<div class="card">
+  <h3>⚙️ 云端任务</h3>
+  <div class="row"><button class="pri" id="btnCheckin">手动巡检（签到+领额度）</button></div>
+  <div class="row" style="margin-top:9px"><button id="btnRefill">手动补号</button></div>
+  <div class="hint">补号撞限流会自动停（PixAI IP 级 429）。日常挂定时任务即可，不用手点。</div>
+</div>
+
+<div class="card">
+  <h3>🕒 最近运行</h3>
+  <div class="list" id="runs"><div class="it">加载中…</div></div>
+</div>
+
+<div class="card">
+  <h3>📜 运行日志 <span class="tagx" id="logTag">最近一次 session</span></h3>
+  <button id="btnLog">加载日志</button>
+  <div class="log" id="log">—</div>
+</div>
+
+<div id="toasts"></div>
+<script src="app.js"></script>
+<script>
+var LAST_RUN=null;
+
+function fmtDur(a,b){
+  if(!a||!b) return '';
+  var s=Math.round((new Date(b)-new Date(a))/1000);
+  return s>60 ? Math.floor(s/60)+'分'+(s%60)+'秒' : s+'秒';
+}
+
+async function load(){
+  if(!WBI.TOK) return;
+  try{
+    const d=await readFile('data/dzmm_accounts.json'); let n=0; try{n=(JSON.parse(d.text||'[]')).length}catch(e){}
+    $('dz').textContent = n||'—'; $('dzq').textContent = n ? (n*75)+' 张' : '—';
+  }catch(e){}
+  try{
+    const p=await readFile('data/pixai_pool.json'); let a=[];
+    try{a=JSON.parse(p.text||'[]')}catch(e){}
+    const alive=a.filter(function(x){return !x.dead});
+    $('px').textContent = a.length ? (alive.length+'/'+a.length) : '—';
+    const q=a.reduce(function(s,x){ return s+parseInt(x.quota||0,10); },0);
+    $('pxq').textContent = q ? (q.toLocaleString()+' ≈ '+(q/2200|0)+' 张') : '—';
+    const claimed=a.filter(function(x){return x.daily_claimed}).length;
+    $('pinfo').textContent = 'PixAI 今日已领额度：'+claimed+'/'+a.length+' 个号 · 每号 10000 quota ≈ 4.5 张';
+  }catch(e){}
+  try{
+    const s=await readFile('data/session_status.json'); let st={};
+    try{st=JSON.parse(s.text||'{}')}catch(e){}
+    if(st.waf){ const w=st.waf, bad=(w.wafStreak>0)||w.circuitOpen;
+      $('waf').textContent = w.circuitOpen?('熔断 '+w.circuitLeftSec+'s'):(w.pausedSec>0?('退避 '+w.pausedSec+'s'):'正常');
+      $('waf').style.color = bad?'var(--warn)':'var(--ok)'; }
+    else $('waf').textContent='空闲';
+  }catch(e){}
+  try{
+    const r=await gh('/repos/'+WBI.REPO+'/actions/runs?per_page=10');
+    const R=r.workflow_runs||[];
+    LAST_RUN = R[0]||null;
+    $('runs').innerHTML = R.length ? R.map(function(x){
+      const nm=(x.name||'').replace('wbi-','');
+      const cls = x.conclusion==='success'?'var(--ok)':(x.status==='in_progress'?'var(--warn)':'var(--err)');
+      return '<div class="it"><span class="nm">'+nm+' #'+x.run_number+'</span>'+
+        '<span class="mt" style="color:'+cls+'">'+(x.status==='in_progress'?x.status:(x.conclusion||x.status))+'<br>'+
+        fmtDur(x.run_started_at,x.updated_at)+'</span>'+
+        '<a href="'+x.html_url+'" target="_blank"><button>开</button></a></div>';
+    }).join('') : '<div class="it">无记录</div>';
+  }catch(e){}
+}
+
+$('btnCheckin').onclick=function(){ busy($('btnCheckin'),async function(){
+  await dispatch('checkin.yml',{}); toast('✅ 已触发巡检（Actions → wbi-checkin）','ok',6000); setTimeout(load,8000);
+}); };
+$('btnRefill').onclick=function(){ busy($('btnRefill'),async function(){
+  await dispatch('refill.yml',{platform:'pixai',max_new:'2',interval:'300'});
+  toast('✅ 已触发补号（每次 2 个，防限流）','ok',6000); setTimeout(load,8000);
+}); };
+$('btnLog').onclick=function(){ busy($('btnLog'),async function(){
+  try{
+    const rid=LAST_RUN?LAST_RUN.id:(await gh('/repos/'+WBI.REPO+'/actions/runs?per_page=1')).workflow_runs[0].id;
+    const j=await gh('/repos/'+WBI.REPO+'/actions/runs/'+rid+'/jobs');
+    const job=(j.jobs||[])[0]; if(!job) { toast('没找到 job','err'); return; }
+    const t=await fetch(API+'/repos/'+WBI.REPO+'/actions/jobs/'+job.id+'/logs',
+      {headers:{Authorization:'token '+WBI.TOK}});
+    const txt=await t.text();
+    const lines=txt.split('\n');
+    $('log').textContent = lines.slice(Math.max(0,lines.length-160)).join('\n');
+    $('logTag').textContent = (LAST_RUN?('#'+LAST_RUN.run_number):'') + ' 日志';
+    toast('已加载日志','ok');
+  }catch(e){ toast('读日志失败：'+e.message,'err'); }
+}); };
+
+bootPage({ title:'号池', active:'pool.html', onReady:function(){
+  load(); WBI.TIMER=setInterval(load,25000);
+}});
+</script>
+</body>
+</html>
