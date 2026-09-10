@@ -1,454 +1,375 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark" data-page-node-id="7DTYLe03HFSNHDecC9ero9">
-<head data-page-node-id="aChrxUBwjABwQ9N8rLhkHX">
-<meta charset="utf-8" data-page-node-id="AbZp3xGtT0RMKvmFDBNOE6">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="655nufp8sPW8RQYCjwjlHI">
-<title>wbi 生图控制台</title>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>wbi 控制台</title>
 <style>
-  :root{
-    --bg:#0d1117; --bg2:#161b22; --bg3:#1c2230; --bd:#2a3240;
-    --fg:#e6edf3; --fg2:#9aa7b4; --fg3:#6b7684;
-    --ac:#4c8dff; --ok:#3fb950; --warn:#d29922; --err:#f85149; --pk:#bc8cff;
-    --r:14px; --sh:0 6px 24px rgba(0,0,0,.35);
-  }
+  :root{--bg:#0d1117;--bg2:#161b22;--bg3:#1f2632;--bd:#2c3444;--fg:#e6edf3;--fg2:#98a3b3;--fg3:#66707f;
+        --ac:#4c8dff;--ok:#3fb950;--warn:#d29922;--err:#f85149;--pk:#bc8cff}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{margin:0;background:var(--bg);color:var(--fg);
-    font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-    padding:18px 16px 60px;max-width:1180px;margin:0 auto}
-  h1{font-size:19px;margin:0 0 4px;letter-spacing:.3px}
-  h1 span{color:var(--ac)}
-  .sub{color:var(--fg3);font-size:12.5px;margin-bottom:16px}
-  .card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--sh)}
-  .card h2{font-size:14px;margin:0 0 12px;display:flex;align-items:center;gap:8px;color:var(--fg);font-weight:600}
-  .card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--fg3);flex:none}
-  .card h2 .dot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(63,185,80,.15)}
-  .card h2 .dot.run{background:var(--warn);animation:pulse 1.2s infinite}
-  @keyframes pulse{50%{opacity:.35}}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  label{font-size:12.5px;color:var(--fg2);flex:none}
-  input,select,textarea{background:var(--bg3);border:1px solid var(--bd);color:var(--fg);
-    border-radius:9px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none;min-width:0}
+  body{margin:0;background:var(--bg);color:var(--fg);padding:14px 14px 40px;max-width:720px;margin:0 auto;
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  .hd{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .hd b{font-size:18px}.hd b i{color:var(--ac);font-style:normal}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--fg3);flex:none}
+  .dot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(63,185,80,.15)}
+  .dot.run{background:var(--warn);animation:pl 1.1s infinite}@keyframes pl{50%{opacity:.3}}
+  .card{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+  .card>h3{margin:0 0 11px;font-size:14px;font-weight:600;color:var(--fg2);letter-spacing:.4px}
+  input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--bd);color:var(--fg);
+    border-radius:11px;padding:12px;font-size:15px;font-family:inherit;outline:none}
   input:focus,select:focus,textarea:focus{border-color:var(--ac)}
-  input[type=text],input[type=password]{flex:1;min-width:150px}
-  textarea{width:100%;min-height:74px;resize:vertical}
-  button{background:var(--bg3);border:1px solid var(--bd);color:var(--fg);border-radius:9px;
-    padding:9px 16px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:.15s}
-  button:hover:not(:disabled){border-color:var(--ac);color:#fff}
-  button:disabled{opacity:.4;cursor:not-allowed}
+  textarea{min-height:88px;resize:vertical;line-height:1.5}
+  button{border:1px solid var(--bd);background:var(--bg3);color:var(--fg);border-radius:11px;padding:12px 14px;
+    font-size:15px;font-family:inherit;cursor:pointer;font-weight:500;transition:.15s;width:100%}
+  button:active{transform:scale(.985)}
+  button:disabled{opacity:.4}
   button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
-  button.pri:hover:not(:disabled){filter:brightness(1.12)}
-  button.ok{background:var(--ok);border-color:var(--ok);color:#04120a}
+  button.go{background:var(--ok);border-color:var(--ok);color:#04120a}
   button.dg{background:transparent;border-color:var(--err);color:var(--err)}
-  button.dg:hover:not(:disabled){background:var(--err);color:#fff}
-  .tag{font-size:11.5px;padding:2.5px 8px;border-radius:20px;background:var(--bg3);color:var(--fg2);border:1px solid var(--bd)}
-  .tag.ok{color:var(--ok);border-color:rgba(63,185,80,.4)}
-  .tag.err{color:var(--err);border-color:rgba(248,81,73,.4)}
-  .tag.warn{color:var(--warn);border-color:rgba(210,153,34,.4)}
-  .grid{display:grid;gap:10px}
-  .g3{grid-template-columns:repeat(auto-fit,minmax(135px,1fr))}
-  .kv{background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:11px 12px}
-  .kv .k{font-size:11.5px;color:var(--fg3);margin-bottom:3px}
-  .kv .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
-  .list{max-height:330px;overflow:auto;border:1px solid var(--bd);border-radius:10px}
-  .it{display:flex;gap:9px;align-items:center;padding:8px 11px;border-bottom:1px solid var(--bd);font-size:12.5px}
-  .it:last-child{border-bottom:0}
-  .it:hover{background:var(--bg3)}
-  .it .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .it .mt{color:var(--fg3);font-size:11.5px;flex:none}
-  .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:9px}
-  .gal a{display:block;border-radius:10px;overflow:hidden;border:1px solid var(--bd);background:var(--bg3);aspect-ratio:3/4}
-  .gal img{width:100%;height:100%;object-fit:cover;display:block}
-  .log{background:#080b10;border:1px solid var(--bd);border-radius:10px;padding:11px;
-    font:11.5px/1.55 ui-monospace,Menlo,Consolas,monospace;color:var(--fg2);
-    max-height:260px;overflow:auto;white-space:pre-wrap;word-break:break-all}
-  .hint{font-size:11.5px;color:var(--fg3);margin-top:7px;line-height:1.55}
-  .bar{height:7px;background:var(--bg3);border-radius:20px;overflow:hidden;margin-top:9px}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+  .row{display:flex;gap:9px;align-items:center}
+  .row>*{flex:1}.row>.fx{flex:none}
+  .lbl{font-size:12.5px;color:var(--fg3);margin:9px 0 5px}
+  .stat{background:var(--bg3);border-radius:11px;padding:10px 11px;text-align:center}
+  .stat .k{font-size:11.5px;color:var(--fg3)}
+  .stat .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+  .tagx{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:20px;background:var(--bg3);
+    color:var(--fg2);border:1px solid var(--bd);margin-left:5px}
+  .bar{height:7px;background:var(--bg3);border-radius:20px;overflow:hidden;margin:11px 0 0}
   .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--pk));width:0;transition:width .5s}
-  .flex1{flex:1}
-  details summary{cursor:pointer;color:var(--fg2);font-size:12.5px;padding:4px 0}
-  code{background:var(--bg3);padding:1px 6px;border-radius:5px;font-size:12px}
+  .list{max-height:270px;overflow:auto;border:1px solid var(--bd);border-radius:11px;margin-top:9px}
+  .it{display:flex;gap:8px;align-items:center;padding:9px 11px;border-bottom:1px solid var(--bd);font-size:13px}
+  .it:last-child{border-bottom:0}
+  .it .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .it .mt{color:var(--fg3);font-size:11.5px;flex:none}
+  .it button{width:auto;padding:5px 12px;font-size:12.5px}
+  .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px;margin-top:10px}
+  .gal a{display:block;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid var(--bd);background:var(--bg3)}
+  .gal img{width:100%;height:100%;object-fit:cover;display:block}
+  .hint{font-size:12px;color:var(--fg3);margin-top:8px;line-height:1.5}
+  .log{background:#080b10;border:1px solid var(--bd);border-radius:10px;padding:10px;margin-top:9px;
+    font:11.5px/1.5 ui-monospace,Menlo,Consolas,monospace;color:var(--fg2);max-height:210px;overflow:auto;
+    white-space:pre-wrap;word-break:break-all}
+  details{border-top:1px solid var(--bd);padding-top:11px;margin-top:11px}
+  summary{cursor:pointer;color:var(--fg2);font-size:13.5px;font-weight:500;list-style:none;padding:3px 0}
+  summary::-webkit-details-marker{display:none}
+  summary:before{content:"▸ ";color:var(--fg3)}details[open] summary:before{content:"▾ "}
+  #toasts{position:fixed;left:0;right:0;bottom:0;padding:0 14px 18px;display:flex;flex-direction:column;
+    gap:8px;pointer-events:none;z-index:99}
+  .toast{background:#232c3a;border:1px solid var(--bd);border-left:4px solid var(--ac);border-radius:11px;
+    padding:12px 14px;font-size:14px;box-shadow:0 8px 26px rgba(0,0,0,.5);animation:in .22s ease;word-break:break-word;white-space:pre-wrap}
+  .toast.ok{border-left-color:var(--ok)}.toast.err{border-left-color:var(--err)}.toast.warn{border-left-color:var(--warn)}
+  @keyframes in{from{opacity:0;transform:translateY(14px)}}
+  .busy{position:relative;pointer-events:none;opacity:.75}
+  .busy:after{content:"";position:absolute;right:12px;top:50%;width:14px;height:14px;margin-top:-7px;
+    border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
-<body data-page-node-id="1W5of5qzz45d6Bh6wMtK2V">
+<body>
 
-<h1 data-page-node-id="GLjqB04tos5kG0RH2eXyiJ">wbi <span data-page-node-id="2GxFuvTsBeV4JMGKpuySEk">生图控制台</span></h1>
-<div class="sub" data-page-node-id="BApbNKCE7zZwU4HyCoUthA">空壳前端：输入 GitHub 令牌后，才可控制云端会话（开始 / 续期 / 停止 / 生图）。所有计算都在云端 Actions 完成，本机无需开机。</div>
+<div class="hd"><i class="dot" id="connDot"></i><b>wbi <i>控制台</i></b>
+  <span class="tagx" id="connTag">未连接</span></div>
 
-<!-- 1. 连接 -->
-<div class="card" data-page-node-id="VoBsAgV8evxpeQU8SnvhWM">
-  <h2 data-page-node-id="AtzZBkWq1uB2XcbgUjwoqU"><i class="dot" id="connDot" data-page-node-id="ADzd4KTuO0XxaIp8DHrqTE"></i>① 连接仓库</h2>
-  <div class="row" data-page-node-id="vrwuymRwZw5hyMvfy3iQKE">
-    <label data-page-node-id="C1HlNU3NYEpXDgFHbhyYVx">仓库</label>
-    <input type="text" id="repo" placeholder="owner/repo" value="shake24342/wbi-image-api" data-page-node-id="ZJLc20B9zP0CDcxuAG27qe">
+<div class="card" id="cardConn">
+  <h3>① 连接仓库</h3>
+  <input type="text" id="repo" placeholder="owner/repo" value="shake24342/wbi-image-api">
+  <div class="lbl"></div>
+  <input type="password" id="tok" placeholder="粘贴 GitHub 令牌（ghp_ 开头）">
+  <div class="hint" id="tokInfo"></div>
+  <div class="row" style="margin-top:11px">
+    <button class="pri" id="btnConn">连接</button>
+    <button class="fx" id="btnForget" style="width:auto">清除</button>
   </div>
-  <div class="row" style="margin-top:10px" data-page-node-id="aSHAVEXqP7yZBcO9L56oXo">
-    <label data-page-node-id="79Pw5u7u1naMdE93F9fGpb">令牌</label>
-    <input type="password" id="tok" placeholder="GitHub PAT（需 repo + workflow 权限）" data-page-node-id="wbIqOkmvgryxtepoH7VpBN">
-    <button class="pri" id="btnConn" data-page-node-id="5XjZTggaefOsldgnBRJTQh">连接</button>
-    <button id="btnForget" data-page-node-id="JuFJ2sjZPQGbszb2SjGBvp">清除</button>
-  </div>
-  <div class="hint" id="connMsg" data-page-node-id="RtguQ9To9Rb4uVj7U7Gt0W">令牌只存在你本机浏览器（localStorage），不会上传到任何第三方。建议用 fine-grained token，仅授权本仓库的 <code data-page-node-id="mWSWmuQbcpoBkUx0Ur8zsE">Contents: RW</code> + <code data-page-node-id="ij6boOEr9ysJKmX0diE4ko">Actions: RW</code>。</div>
+  <div class="hint">令牌只存在你手机浏览器里。需要 <code>repo</code> + <code>workflow</code> 权限。</div>
 </div>
 
-<!-- 2. 会话控制 -->
-<div class="card" data-page-node-id="upk3T0l9mWAbQGpB5VaQuo">
-  <h2 data-page-node-id="8FewB5dZy6fWPUFEtix0Ut"><i class="dot" id="sessDot" data-page-node-id="oMWnzkVWCniDvQ9eDE78Tw"></i>② 云端会话（点开始 → 跑起来；不续期 → 几分钟后自动关闭）</h2>
-  <div class="row" data-page-node-id="D4OPab7WFkSmu6VLz5AZxs">
-    <label data-page-node-id="CDxy5WIE5lPE6kaBZnEENe">时长</label>
-    <select id="minutes" data-page-node-id="KwzOPyUOEDUAuFRr6y8q5G">
-      <option value="5" data-page-node-id="kNWgkvDGc3xeYZM3noKwCv">5 分钟</option>
-      <option value="15" selected data-page-node-id="EcdLrVrYZ0As8HGbfGbc8M">15 分钟</option>
-      <option value="30" data-page-node-id="EPFPgCbQrliiTSWoPBEfm0">30 分钟</option>
-      <option value="60" data-page-node-id="3vh2vzDrI95u3vZXMaawKb">1 小时</option>
-      <option value="180" data-page-node-id="UcQmux6sEWYAUXfuMRe2Ty">3 小时</option>
-    </select>
-    <label data-page-node-id="Qs195yx2w5FglCiN3HX6ZV">模式</label>
-    <select id="mode" data-page-node-id="ie5lEhDf4cEZqlKtqJf0MB">
-      <option value="mixed" selected data-page-node-id="6gZEbABQZzwO35vOREXGJd">混合（巡检 + 生图队列）</option>
-      <option value="checkin" data-page-node-id="sBnGW4dEb6ClQYuPLGt5yO">只巡检号池</option>
-      <option value="generate" data-page-node-id="4AeGwFNzY4W3UeZpTXWyih">只跑生图队列</option>
-    </select>
-    <button class="ok" id="btnStart" data-page-node-id="ZA2c67snQQWr3gnjtB8vBv">▶ 开始运行</button>
-    <button class="pri" id="btnRenew" data-page-node-id="QGOL9OhsNYYWRa9Phfetyp">⏱ 续期 +15 分</button>
-    <button class="dg" id="btnStop" data-page-node-id="1VomGHQb3eduQEjzSvoen6">■ 停止</button>
-    <button id="btnCancelRun" data-page-node-id="zcyWGGtfbNJ9WDBU4kd3NF">取消云端 run</button>
+<div class="card">
+  <h3>② 云端会话</h3>
+  <div class="g3">
+    <div class="stat"><div class="k">状态</div><div class="v" id="stState">—</div></div>
+    <div class="stat"><div class="k">剩余</div><div class="v" id="stLeft">—</div></div>
+    <div class="stat"><div class="k">轮次</div><div class="v" id="stRounds">—</div></div>
   </div>
-  <div class="bar" data-page-node-id="B0eHrK5MOpvNdXH6yNh3Aw"><i id="bar" data-page-node-id="EIDvEGmzFBwBzyptc3YPMn"></i></div>
-  <div class="grid g3" style="margin-top:12px" data-page-node-id="H6mVCaUo4mLhiHyq17j4hC">
-    <div class="kv" data-page-node-id="67v8Zex3kBPD2QpCEuR2HJ"><div class="k" data-page-node-id="yiQ6Th8wOIZ4Gf93Ww23ul">会话状态</div><div class="v" id="stState" data-page-node-id="Yf6HkwprQv95U6nVqRmDJl">—</div></div>
-    <div class="kv" data-page-node-id="n9EKT0ayjKtqoPe0qRci5p"><div class="k" data-page-node-id="BTSBjgTwlpccFB873frnZg">剩余时间</div><div class="v" id="stLeft" data-page-node-id="kthSR9WC5dcNA4yplgb7og">—</div></div>
-    <div class="kv" data-page-node-id="P258XzMMBfJ935sA2l4Kwe"><div class="k" data-page-node-id="q8G0i6EKCN2YW2873JpCI7">已跑轮次</div><div class="v" id="stRounds" data-page-node-id="9dyfh5tEYM16ChZQdmHBkD">—</div></div>
-    <div class="kv" data-page-node-id="MxFg0zsluFvdFnPsuorK5i"><div class="k" data-page-node-id="tmpXcqasTTnFkOVOc6FeAB">云端 Run</div><div class="v" id="stRun" style="font-size:13px" data-page-node-id="TJrSynEKELYuTASAIVBpPX">—</div></div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="row" style="margin-top:11px">
+    <button class="go" id="btnStart">▶ 开始</button>
+    <button class="fx" id="minSel" style="width:92px;padding:12px 6px">15分</button>
   </div>
-  <div class="hint" data-page-node-id="6nUl6AJghUiYHojxbxfqWv">「开始」= 触发云端 <code data-page-node-id="d7ySmPnhKHaNm3966N4uyG">wbi-session</code> 工作流；「续期」= 改写 <code data-page-node-id="shqiLpzLxilyiwPZNNwOwp">data/session_renew.json</code> 的过期时间；**到点未续期，云端进程自动退出**（省 Actions 分钟）。</div>
+  <div class="g2" style="margin-top:9px">
+    <button id="btnRenew">⏱ 续期 +15分</button>
+    <button class="dg" id="btnStop">■ 停止</button>
+  </div>
+  <div class="hint">不续期 → 到点云端进程自动结束（省 Actions 分钟）。当前 run：<span id="stRun">—</span></div>
 </div>
 
-<!-- 3. 生图 -->
-<div class="card" data-page-node-id="FY3rwwAuQEqhCdTdPVRwHi">
-  <h2 data-page-node-id="dJiOlGpi2gZtHug7k6lSIq"><i class="dot" data-page-node-id="73e6Wg2fFo318joDtcIsaC"></i>③ 生图</h2>
-  <div class="row" data-page-node-id="g71bR0yVEuFmLkzeNRK0SE">
-    <label data-page-node-id="5Fw4rmtkgBjMeiIHZNYX6s">模型</label>
-    <select id="model" style="flex:1;min-width:200px" data-page-node-id="IS9tVQYfhPykd2yARbncsh"></select>
-    <label data-page-node-id="HL5JrlqhLbcyq1wQgyl1Im">尺寸</label>
-    <select id="dim" data-page-node-id="JzFoDpxFq1ZBsa8a3WXMtJ">
-      <option data-page-node-id="qmxUy3i35nKf3oXio0ntod">3:4</option><option data-page-node-id="OOYiuFAcOS5aEfZfSafqcr">1:1</option><option data-page-node-id="1psrqSi520Ef8qxEwGFkDe">2:3</option><option data-page-node-id="yVJT2LzjqZCcGLBEfS0Cm9">4:3</option>
-      <option data-page-node-id="mBXJGT9BXzn9GJZihePE3U">3:2</option><option data-page-node-id="O2IrEnRqTu0RskeG0X4P5U">16:9</option><option data-page-node-id="YhDcjb2A03YTqjgpKMw6GW">9:16</option>
-    </select>
-    <label data-page-node-id="1K2I99KCK5HKPDyZ8q8OHi">张数</label>
-    <select id="count" data-page-node-id="NVPDBEHdaPeOby6jWwYZLI"><option data-page-node-id="liaZeYKQg7D2RGrIAkZDGK">1</option><option data-page-node-id="2owVCe0B7kVvymewhMh9UI">2</option><option data-page-node-id="jo15FGbBOI2zIpkkfvqnas">3</option><option data-page-node-id="leorbI7PF4dkPSdVVwbfB6">4</option></select>
+<div class="card">
+  <h3>③ 生图 <span class="tagx" id="queueTag">队列 0</span></h3>
+  <div class="lbl">提示词（务必写明「成年 / adult」）</div>
+  <textarea id="prompt" placeholder="例：25岁成年女性，黑长直，和服，神社，秋天落叶，写实摄影，35mm 胶片，masterpiece"></textarea>
+  <div class="lbl">模型</div>
+  <select id="model"></select>
+  <div class="g2">
+    <div><div class="lbl">尺寸</div>
+      <select id="dim"><option>3:4</option><option>1:1</option><option>2:3</option><option>4:3</option><option>3:2</option><option>16:9</option><option>9:16</option></select></div>
+    <div><div class="lbl">张数</div>
+      <select id="count"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
   </div>
-  <textarea id="prompt" style="margin-top:10px" placeholder="提示词，例如：1girl, solo, kimono, shrine, autumn leaves, masterpiece, best quality"></textarea>
-  <div class="row" style="margin-top:10px" data-page-node-id="wBiXo1NwNmLVpTB6hi2W3T">
-    <button class="pri" id="btnQueue" data-page-node-id="khJepWObXEF4lKDLFYFv9a">＋ 加入队列（云端会话去跑）</button>
-    <button id="btnNow" data-page-node-id="221BBK8XbzwGGQsoltw5yz">⚡ 立即生图（单开一次 run）</button>
-    <span class="tag" id="queueTag" data-page-node-id="zosdt32PzfI7kQkMA47mWM">队列 —</span>
+  <div class="row" style="margin-top:12px">
+    <button class="pri" id="btnNow">⚡ 立即生图</button>
+    <button id="btnQueue">＋ 排队</button>
   </div>
-  <div class="hint" data-page-node-id="SlygLjCuHd39ciktGlfKdZ">「加入队列」写入 <code data-page-node-id="lFtCjgjl10oZjOtSbHFGTm">data/queue.json</code>，会话跑着时每隔几分钟取一条执行；「立即生图」直接触发 <code data-page-node-id="gdLOeNNrjuVuwgdRFmf4AR">wbi-generate</code>（不依赖会话）。</div>
+  <div class="hint">「立即生图」= 单开一次云端 run，约 1~3 分钟出图，完成后自动回传（下面看图）。</div>
+  <div id="lastOut" class="hint"></div>
+  <div class="gal" id="gal"></div>
 </div>
 
-<!-- 4. 模型清单 -->
-<div class="card" data-page-node-id="NeW6aTtoACEI51Cu9EEMsy">
-  <h2 data-page-node-id="Q4Of3i9uC6fcep9igFAPe7"><i class="dot" data-page-node-id="oTCN0KapMlIBeJ3kyDTqtm"></i>④ 全部模型 <span class="tag" id="mCnt" data-page-node-id="zslcyO2pHEGkOfPLe7bi33">—</span></h2>
-  <div class="row" data-page-node-id="sZqCEC7glsE2RxBgfdlArZ">
-    <input type="text" id="mSearch" placeholder="搜索模型名（如 realvis / tsubaki / 写实）" data-page-node-id="BovVDarowGyt7W6GIETr77">
-    <select id="mSource" data-page-node-id="FC39Mu0iMIXDaYinKPnfuy"><option value="" data-page-node-id="OuQ0aZqvzBSONgLmY16VFU">全部来源</option><option value="dzmm" data-page-node-id="SDMArocTVZsXxqJKshar5B">dzmm</option><option value="pixai" data-page-node-id="Y5BEbQqRCLRDQMrAmRzyv3">PixAI</option></select>
-    <select id="mType" data-page-node-id="DwbTzTUcKdi7C6ZzYWHDKw"><option value="" data-page-node-id="QWd3q0EPmPglCkjq3ua8oZ">全部类型</option></select>
-  </div>
-  <div class="list" id="mList" style="margin-top:10px" data-page-node-id="Fksg0UDQgSTVFNm04PSRux"><div class="it" data-page-node-id="HrVQkH4vcOFHqSJmeGheiI">填令牌后点「连接」，再点「加载全部模型」</div></div>
-  <div class="row" style="margin-top:10px" data-page-node-id="YPty0GpECCd7ReMFaUJh2G">
-    <button id="btnLoadModels" data-page-node-id="AWSJydTKhjsExVEb7WSyj2">加载全部模型（PixAI 1.85 万 + dzmm 7）</button>
-  </div>
-</div>
-
-<!-- 5. 号池 + 产出 -->
-<div class="card" data-page-node-id="htlH9wnCeXIABywbWHcXaN">
-  <h2 data-page-node-id="oYNIHf5hjwOQSqY0PafdQR"><i class="dot" data-page-node-id="sIwiw1Cvb0u7g2ZFAOqc9l"></i>⑤ 号池状态 &amp; 最近产出</h2>
-  <div class="grid g3" data-page-node-id="wu5ZBv7dSiHanwn0WbxJ1q">
-    <div class="kv" data-page-node-id="26K3p2DnhYg17mYG4y4KyC"><div class="k" data-page-node-id="nIiyJUYkE7tqvHa2lg2Jl4">dzmm 可用号</div><div class="v" id="pDzmm" data-page-node-id="yXkl1IvyQNKIwelZCxMWFC">—</div></div>
-    <div class="kv" data-page-node-id="lJNe1cw4f5inCWGFHXMPAc"><div class="k" data-page-node-id="VeLLGzHZa8kOI3OsJ4bJCZ">PixAI 可用号</div><div class="v" id="pPixai" data-page-node-id="W2bVs4YPnOHivlnM63ET6s">—</div></div>
-    <div class="kv" data-page-node-id="RzWzOfrOrCoUcxLPyLriqG"><div class="k" data-page-node-id="xiT4cFBMka6r3kG0OeBUWS">最近产出</div><div class="v" id="pOut" data-page-node-id="DFE2O2sz3xFqlnzkNWYGwj">—</div></div>
-  </div>
-  <div class="gal" id="gal" style="margin-top:12px" data-page-node-id="Xqu0vPdt0TWm0zEXu6C5Db"></div>
-  <details style="margin-top:10px" data-page-node-id="TXobdpz0eW06BDRwYgQH4s">
-    <summary data-page-node-id="DF8Doqstm8gv4u17DJYE9e">运行日志（最近一次 session run）</summary>
-    <div class="log" id="log" data-page-node-id="AC59HrtbASPwAbqioA1lFZ">—</div>
+<div class="card">
+  <details>
+    <summary>④ 全部模型（dzmm 7 + PixAI 1.85 万）</summary>
+    <input type="text" id="mSearch" placeholder="搜索，如 realvis / tsubaki / 写实" style="margin-top:9px">
+    <div class="g2" style="margin-top:9px">
+      <select id="mSource"><option value="">全部来源</option><option value="dzmm">dzmm</option><option value="pixai">PixAI</option></select>
+      <select id="mType"><option value="">全部类型</option></select>
+    </div>
+    <button id="btnLoadModels" style="margin-top:9px">加载全部模型 <span class="tagx" id="mCnt">—</span></button>
+    <div class="list" id="mList"><div class="it">点上面按钮加载</div></div>
+  </details>
+  <details>
+    <summary>号池状态 &amp; 风控</summary>
+    <div class="g3" style="margin-top:10px">
+      <div class="stat"><div class="k">dzmm</div><div class="v" id="pDzmm">—</div></div>
+      <div class="stat"><div class="k">PixAI</div><div class="v" id="pPixai">—</div></div>
+      <div class="stat"><div class="k">风控</div><div class="v" id="stWaf" style="font-size:13px">—</div></div>
+    </div>
+    <details><summary>运行日志</summary><div class="log" id="log">—</div></details>
   </details>
 </div>
 
+<div id="toasts"></div>
+
 <script>
-const LS_REPO='wbi.repo', LS_TOK='wbi.tok';
-const $=id=>document.getElementById(id);
+const $=i=>document.getElementById(i);
 const API='https://api.github.com';
+const LS_R='wbi.repo', LS_T='wbi.tok';
 let REPO='', TOK='', MODELS=[], RUNS=[], TIMER=null;
 
-/* ---------- 存储 ---------- */
-$('repo').value = localStorage.getItem(LS_REPO) || 'shake24342/wbi-image-api';
-$('tok').value  = localStorage.getItem(LS_TOK) || '';
-$('btnForget').onclick = ()=>{ localStorage.removeItem(LS_TOK); $('tok').value=''; msg('已清除令牌',''); setConn(false); };
+function toast(text, kind, ms){
+  const d=document.createElement('div');
+  d.className='toast '+(kind||''); d.textContent=text;
+  $('toasts').appendChild(d);
+  setTimeout(function(){ d.style.transition='.3s'; d.style.opacity=0; setTimeout(function(){d.remove()},320); }, ms||4200);
+  while($('toasts').children.length>3) $('toasts').firstChild.remove();
+}
+async function busy(btn, fn){
+  const old=btn.textContent; btn.classList.add('busy'); btn.disabled=true;
+  try{ return await fn(); }
+  finally{ btn.classList.remove('busy'); btn.disabled=false; btn.textContent=old; }
+}
 
-function msg(t, cls){ const e=$('connMsg'); e.textContent=t; e.style.color = cls==='ok'?'var(--ok)':cls==='err'?'var(--err)':'var(--fg3)'; }
-function setConn(on){ const d=$('connDot'); d.className='dot'+(on?' on':''); }
+function cleanTok(v){
+  return (v||'').replace(/[\u200B-\u200D\u2060\uFEFF\u00A0]/g,'').replace(/\s+/g,'')
+                 .replace(/^["'`]+|["'`]+$/g,'');
+}
+function tokInfo(){
+  const raw=$('tok').value, c=cleanTok(raw);
+  if(!c){ $('tokInfo').textContent=''; return; }
+  const ok=c.indexOf('ghp_')===0||c.indexOf('github_pat_')===0;
+  let s='长度 '+c.length+' · '+(ok?'格式 ✓':'格式 ✗ 应以 ghp_ 开头');
+  if(c!==raw) s+=' · <span style="color:var(--warn)">已清理 '+(raw.length-c.length)+' 个多余字符</span>';
+  $('tokInfo').innerHTML=s; $('tokInfo').style.color=ok?'var(--ok)':'var(--err)';
+}
+$('tok').addEventListener('input',tokInfo);
+$('tok').addEventListener('paste',function(){ setTimeout(tokInfo,30); });
 
-/* ---------- GitHub API ---------- */
-async function gh(path, opt={}){
-  const r = await fetch(API+path, {
-    ...opt,
-    headers:{ 'Authorization':'token '+TOK, 'Accept':'application/vnd.github+json',
-              'Content-Type':'application/json', ...(opt.headers||{}) }
-  });
-  const txt = await r.text();
-  let j=null; try{ j = txt?JSON.parse(txt):null; }catch(e){ j={_raw:txt}; }
+async function gh(path,opt){
+  opt=opt||{};
+  const r=await fetch(API+path,{method:opt.method||'GET',
+    headers:{Authorization:'token '+TOK,Accept:'application/vnd.github+json','Content-Type':'application/json'},
+    body:opt.body});
+  const t=await r.text(); let j=null; try{j=t?JSON.parse(t):null}catch(e){j={}}
   if(!r.ok) throw new Error((j&&(j.message||j.error))||('HTTP '+r.status));
   return j;
 }
-/* 清洗令牌：去掉所有空白与零宽字符（复制最常见的坑） */
-function cleanTok(raw){
-  return (raw||'')
-    .replace(/[\u200B-\u200D\u2060\uFEFF\u00A0]/g,'')  // 零宽/不换行空格
-    .replace(/[\s]+/g,'')                                    // 空格/换行/制表
-    .replace(/^["'`]+|["'`]+$/g,'');                          // 引号
-}
-function showTokInfo(){
-  const raw = $('tok').value, c = cleanTok(raw);
-  if(!c){ $('tokInfo').textContent=''; return; }
-  const ok = c.startsWith('ghp_') || c.startsWith('github_pat_');
-  const parts=[];
-  parts.push(`长度 ${c.length}`);
-  parts.push(ok? '格式 ✓' : '格式 ✗（应以 ghp_ 或 github_pat_ 开头）');
-  if(c !== raw) parts.push(`<span style="color:var(--warn)">已自动清理 ${raw.length-c.length} 个多余字符</span>`);
-  $('tokInfo').innerHTML = parts.join(' · ');
-  $('tokInfo').style.color = ok? 'var(--ok)':'var(--err)';
-}
-$('tok').addEventListener('input', showTokInfo);
-$('tok').addEventListener('paste', ()=> setTimeout(showTokInfo, 30));
-
-const enc = s => btoa(unescape(encodeURIComponent(s)));
-const dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
-
+const enc=function(s){ return btoa(unescape(encodeURIComponent(s))); };
+const dec=function(s){ return decodeURIComponent(escape(atob(s.replace(/\n/g,'')))); };
 async function readFile(p){
-  try{ const j = await gh(`/repos/${REPO}/contents/${p}?t=${Date.now()}`);
-       return { sha:j.sha, text: dec(j.content) }; }
-  catch(e){ return { sha:null, text:null }; }
+  try{ const j=await gh('/repos/'+REPO+'/contents/'+p+'?t='+Date.now()); return {sha:j.sha,text:dec(j.content)}; }
+  catch(e){ return {sha:null,text:null}; }
 }
-async function writeFile(p, obj, message){
-  const cur = await readFile(p);
-  const body = { message: message||('update '+p), content: enc(typeof obj==='string'?obj:JSON.stringify(obj,null,1)) };
-  if(cur.sha) body.sha = cur.sha;
-  return gh(`/repos/${REPO}/contents/${p}`, { method:'PUT', body: JSON.stringify(body) });
+async function writeFile(p,obj,msg){
+  const cur=await readFile(p);
+  const b={message:msg||('update '+p),content:enc(typeof obj==='string'?obj:JSON.stringify(obj,null,1))};
+  if(cur.sha) b.sha=cur.sha;
+  return gh('/repos/'+REPO+'/contents/'+p,{method:'PUT',body:JSON.stringify(b)});
 }
-async function dispatch(wf, inputs){
-  return gh(`/repos/${REPO}/actions/workflows/${wf}/dispatches`,
-            { method:'POST', body: JSON.stringify({ ref:'main', inputs: inputs||{} }) });
+function dispatch(wf,inp){
+  return gh('/repos/'+REPO+'/actions/workflows/'+wf+'/dispatches',
+    {method:'POST',body:JSON.stringify({ref:'main',inputs:inp||{}})});
 }
 
-/* ---------- 连接 ---------- */
-$('btnConn').onclick = async ()=>{
-  REPO = $('repo').value.trim(); TOK = cleanTok($('tok').value);
-  $('tok').value = TOK;
-  showTokInfo();
-  if(!REPO || !TOK){ msg('请填写仓库和令牌','err'); return; }
-  if(!(TOK.startsWith('ghp_')||TOK.startsWith('github_pat_'))){
-    msg('令牌格式不对：应以 ghp_ 或 github_pat_ 开头（当前长度 '+TOK.length+'）','err'); return; }
-  msg('连接中…','');
+$('repo').value=localStorage.getItem(LS_R)||'shake24342/wbi-image-api';
+$('tok').value=localStorage.getItem(LS_T)||'';
+$('btnForget').onclick=function(){ localStorage.removeItem(LS_T); $('tok').value=''; tokInfo();
+  $('connTag').textContent='未连接'; $('connDot').className='dot'; toast('已清除令牌'); };
+
+$('btnConn').onclick=function(){ busy($('btnConn'),async function(){
+  REPO=$('repo').value.trim(); TOK=cleanTok($('tok').value); $('tok').value=TOK; tokInfo();
+  if(!REPO||!TOK){ toast('请填仓库和令牌','err'); return; }
+  if(TOK.indexOf('ghp_')!==0&&TOK.indexOf('github_pat_')!==0){ toast('令牌格式不对（应以 ghp_ 开头）','err'); return; }
   try{
-    const u = await gh('/user');
-    localStorage.setItem(LS_REPO, REPO); localStorage.setItem(LS_TOK, TOK);
-    setConn(true); msg(`已连接：${u.login} → ${REPO}`,'ok');
-    refreshAll(); if(TIMER) clearInterval(TIMER); TIMER = setInterval(refreshAll, 20000);
+    const u=await gh('/user');
+    localStorage.setItem(LS_R,REPO); localStorage.setItem(LS_T,TOK);
+    $('connTag').textContent=u.login; $('connDot').className='dot on';
+    $('cardConn').style.display='none';
+    toast('✅ 已连接 '+u.login,'ok');
+    refreshAll(); if(TIMER)clearInterval(TIMER); TIMER=setInterval(refreshAll,20000);
   }catch(e){
-    setConn(false);
-    if(/Bad credentials/i.test(e.message)){
-      msg('连接失败：Bad credentials —— 令牌无效或被撤销。请确认：① 完整复制无空格 ② 未过期 ③ 未撤销','err');
-    }else if(/Not Found/i.test(e.message)){
-      msg('连接失败：仓库读不到 —— 检查仓库名是否为 '+REPO+'，以及令牌是否有 repo 权限','err');
-    }else{
-      msg('连接失败：'+e.message,'err');
-    }
+    $('connDot').className='dot';
+    if(/Bad credentials/i.test(e.message))
+      toast('令牌无效（Bad credentials）\n检查：①整行复制无空格 ②未过期 ③未撤销','err',9000);
+    else if(/Not Found/i.test(e.message))
+      toast('读不到仓库 '+REPO+'\n检查仓库名与 token 的 repo 权限','err',9000);
+    else toast('连接失败：'+e.message,'err',9000);
   }
-};
+}); };
 
-/* ---------- 会话 ---------- */
-$('btnStart').onclick = async ()=>{
-  try{
-    await writeFile('data/session_renew.json', {expiresAt: Math.floor(Date.now()/1000)+ (+$('minutes').value)*60, mode:$('mode').value, stop:false}, 'session: renew by panel');
-    await dispatch('session.yml', { minutes: $('minutes').value, mode: $('mode').value });
-    msg('已触发云端会话（'+$('minutes').value+' 分钟）','ok'); refreshAll();
-  }catch(e){ msg('触发失败：'+e.message,'err'); }
-};
-$('btnRenew').onclick = async ()=>{
-  try{ await writeFile('data/session_renew.json', {expiresAt: Math.floor(Date.now()/1000)+15*60, mode:$('mode').value, stop:false}, 'session: +15min');
-       msg('已续期 +15 分钟','ok'); refreshAll(); }
-  catch(e){ msg('续期失败：'+e.message,'err'); }
-};
-$('btnStop').onclick = async ()=>{
-  try{ await writeFile('data/session_renew.json', {expiresAt: 0, stop:true}, 'session: stop by panel');
-       msg('已发送停止信号（云端下一轮退出）','ok'); refreshAll(); }
-  catch(e){ msg('停止失败：'+e.message,'err'); }
-};
-$('btnCancelRun').onclick = async ()=>{
-  try{
-    const r = await gh(`/repos/${REPO}/actions/workflows/session.yml/runs?per_page=1`);
-    const run = r.workflow_runs && r.workflow_runs[0];
-    if(!run) return msg('没有找到 run','err');
-    await gh(`/repos/${REPO}/actions/runs/${run.id}/cancel`, {method:'POST'});
-    msg('已取消云端 run #'+run.run_number,'ok'); refreshAll();
-  }catch(e){ msg('取消失败：'+e.message,'err'); }
-};
+var MINUTES=[5,15,30,60], mi=1;
+$('minSel').onclick=function(){ mi=(mi+1)%MINUTES.length; $('minSel').textContent=MINUTES[mi]+'分'; };
 
-/* ---------- 生图 ---------- */
-$('btnQueue').onclick = async ()=>{
-  const p=$('prompt').value.trim(); if(!p) return msg('请填提示词','err');
-  try{
-    const cur = await readFile('data/queue.json');
-    let q=[]; try{ q = JSON.parse(cur.text||'[]'); }catch(e){ q=[]; }
-    q.push({ id:'p'+Date.now(), prompt:p, model:$('model').value, dim:$('dim').value, ts:Math.floor(Date.now()/1000) });
-    await writeFile('data/queue.json', q, 'queue: add job');
-    msg('已加入队列（共 '+q.length+' 条）','ok'); refreshQueue();
-  }catch(e){ msg('入队失败：'+e.message,'err'); }
-};
-$('btnNow').onclick = async ()=>{
-  const p=$('prompt').value.trim(); if(!p) return msg('请填提示词','err');
-  const m=$('model').value; const src = m.startsWith('pixai:')?'pixai':'auto';
-  try{
-    await dispatch('generate.yml', { prompt:p, model:m, dim:$('dim').value, count:$('count').value });
-    msg('已触发云端生图（model='+m+'）','ok'); refreshAll();
-  }catch(e){ msg('触发失败：'+e.message,'err'); }
-};
+$('btnStart').onclick=function(){ busy($('btnStart'),async function(){
+  const m=MINUTES[mi];
+  await writeFile('data/session_renew.json',{expiresAt:Math.floor(Date.now()/1000)+m*60,mode:'mixed',stop:false},'session: start by panel');
+  await dispatch('session.yml',{minutes:String(m),mode:'mixed'});
+  toast('✅ 已启动云端会话（'+m+' 分钟）','ok'); setTimeout(refreshAll,4000);
+}); };
+$('btnRenew').onclick=function(){ busy($('btnRenew'),async function(){
+  await writeFile('data/session_renew.json',{expiresAt:Math.floor(Date.now()/1000)+15*60,mode:'mixed',stop:false},'session: +15min');
+  toast('⏱ 已续期 +15 分钟','ok'); refreshAll();
+}); };
+$('btnStop').onclick=function(){ busy($('btnStop'),async function(){
+  await writeFile('data/session_renew.json',{expiresAt:0,stop:true},'session: stop by panel');
+  toast('■ 已发停止信号（云端下一轮退出）','warn'); refreshAll();
+}); };
 
-/* ---------- 模型清单 ---------- */
-const DZMM=[['anime','二次元（默认，5 credit）'],['anima','anima'],['iroha','Iroha 高质量二次元'],
-  ['z-image','z-image（隐藏）'],['nalang-dream','Nalang Dream 写实 · 无审核（5 credit）'],
-  ['nalang-coser-2','Nalang Coser-2'],['kagami','kagami 写实最高清（仅 1 credit，有敏感词过滤）']];
-const PIXAI_FIX=[['pixai:tsubaki2','PixAI Tsubaki.2（26B 旗舰）'],['pixai:tsubaki','PixAI Tsubaki（7B）'],
+$('btnNow').onclick=function(){ busy($('btnNow'),async function(){
+  const p=$('prompt').value.trim(); if(!p){ toast('请先写提示词','err'); return; }
+  const m=$('model').value;
+  await dispatch('generate.yml',{prompt:p,model:m,dim:$('dim').value,count:$('count').value});
+  toast('⚡ 已提交云端生图（'+m+'）\n约 1~3 分钟后在下面图廊看到结果','ok',7000);
+  setTimeout(refreshAll,15000);
+}); };
+$('btnQueue').onclick=function(){ busy($('btnQueue'),async function(){
+  const p=$('prompt').value.trim(); if(!p){ toast('请先写提示词','err'); return; }
+  const cur=await readFile('data/queue.json'); let q=[]; try{q=JSON.parse(cur.text||'[]')}catch(e){}
+  q.push({id:'p'+Date.now(),prompt:p,model:$('model').value,dim:$('dim').value,ts:Math.floor(Date.now()/1000)});
+  await writeFile('data/queue.json',q,'queue: add job');
+  toast('＋ 已排队（共 '+q.length+' 条）\n会话跑着时会自动取走执行','ok',6000); refreshQueue();
+}); };
+
+var DZ=[['anime','dzmm anime（二次元 默认）'],['anima','dzmm anima'],['iroha','dzmm Iroha 高质量二次元'],
+  ['z-image','dzmm z-image（隐藏）'],['nalang-dream','dzmm Nalang Dream 写实·无审核 ★'],
+  ['nalang-coser-2','dzmm Nalang Coser-2'],['kagami','dzmm kagami 写实最高清（1 credit，有敏感词过滤）']];
+var PX=[['pixai:tsubaki2','PixAI Tsubaki.2（26B 旗舰）★'],['pixai:tsubaki','PixAI Tsubaki（7B）'],
   ['pixai:realvisxl','PixAI RealVisXL V4.0（写实）'],['pixai:cyberrealistic','PixAI CyberRealistic Pony'],
   ['pixai:jibmix','PixAI Jib Mix Realistic XL'],['pixai:nova-unreal','PixAI Nova Unreal XL'],
   ['pixai:analog-madness','PixAI Analog Madness'],['pixai:epicrealism','PixAI epiCRealism XL']];
-function fillModelSel(){
+(function(){
   const s=$('model'); s.innerHTML='';
-  const g0=document.createElement('option'); g0.value='auto'; g0.textContent='auto（自动选源）'; s.appendChild(g0);
+  s.appendChild(new Option('auto（自动选源 · 推荐）','auto'));
   const g1=document.createElement('optgroup'); g1.label='dzmm（无审核 · 75 张/号/天）';
-  DZMM.forEach(([v,t])=>{ const o=document.createElement('option'); o.value='dzmm:'+v; o.textContent=t; g1.appendChild(o); });
-  s.appendChild(g1);
-  const g2=document.createElement('optgroup'); g2.label='PixAI 精选（需绕审核）';
-  PIXAI_FIX.forEach(([v,t])=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; g2.appendChild(o); });
-  s.appendChild(g2);
-}
-fillModelSel();
+  DZ.forEach(function(x){ g1.appendChild(new Option(x[1],'dzmm:'+x[0])); }); s.appendChild(g1);
+  const g2=document.createElement('optgroup'); g2.label='PixAI（画质高 · 有审核）';
+  PX.forEach(function(x){ g2.appendChild(new Option(x[1],x[0])); }); s.appendChild(g2);
+})();
 
-$('btnLoadModels').onclick = async ()=>{
-  if(!TOK) return msg('先连接令牌','err');
-  $('mList').innerHTML='<div class="it">加载中…</div>';
+$('btnLoadModels').onclick=function(){ busy($('btnLoadModels'),async function(){
   const rows=[];
-  DZMM.forEach(([v,t])=>rows.push({id:'dzmm:'+v,t:'dzmm / '+t,src:'dzmm',y:'base',v}));
-  PIXAI_FIX.forEach(([v,t])=>rows.push({id:v,t,src:'pixai',y:'base',v}));
-  try{
-    const f = await readFile('docs/pixai_models_index.json');
-    if(f.text){ JSON.parse(f.text).forEach(m=>rows.push({id:'pixai:'+m.t+'#'+m.v,t:m.t,src:'pixai',y:m.y,v:m.v,cat:m.c})); }
+  DZ.forEach(function(x){ rows.push({id:'dzmm:'+x[0],t:'dzmm '+x[1],src:'dzmm',y:'base'}); });
+  PX.forEach(function(x){ rows.push({id:x[0],t:x[1],src:'pixai',y:'base'}); });
+  try{ const f=await readFile('docs/pixai_models_index.json');
+       if(f.text) JSON.parse(f.text).forEach(function(m){ rows.push({id:'pixai:'+m.t+'#'+m.v,t:m.t,src:'pixai',y:m.y}); });
   }catch(e){}
-  MODELS = rows;
-  const types=[...new Set(rows.map(r=>r.y))].filter(Boolean).sort();
-  $('mType').innerHTML='<option value="">全部类型</option>'+types.map(t=>`<option>${t}</option>`).join('');
-  $('mCnt').textContent = rows.length.toLocaleString()+' 个';
-  renderModels();
-  msg('已加载 '+rows.length+' 个模型','ok');
-};
+  MODELS=rows;
+  const ts=[]; rows.forEach(function(r){ if(r.y&&ts.indexOf(r.y)<0) ts.push(r.y); }); ts.sort();
+  $('mType').innerHTML='<option value="">全部类型</option>'+ts.map(function(t){return '<option>'+t+'</option>'}).join('');
+  $('mCnt').textContent=rows.length.toLocaleString()+' 个'; renderModels();
+  toast('已加载 '+rows.length+' 个模型','ok');
+}); };
 function renderModels(){
   const kw=($('mSearch').value||'').toLowerCase(), src=$('mSource').value, ty=$('mType').value;
-  let r = MODELS.filter(m=> (!src||m.src===src) && (!ty||m.y===ty) && (!kw||m.t.toLowerCase().includes(kw)) );
-  const head = r.slice(0,400);
-  $('mList').innerHTML = head.map(m=>
-    `<div class="it"><span class="nm">${m.t}</span><span class="mt">${m.src}${m.y?' · '+m.y:''}</span>
-     <button style="padding:3px 10px;font-size:11.5px" onclick="useModel('${m.id}')">用</button></div>`).join('')
-    || '<div class="it">无匹配</div>';
-  if(r.length>head.length) $('mList').insertAdjacentHTML('beforeend', `<div class="it" style="color:var(--fg3)">…还有 ${r.length-head.length} 个，请用搜索缩小范围</div>`);
+  const r=MODELS.filter(function(m){ return (!src||m.src===src)&&(!ty||m.y===ty)&&(!kw||m.t.toLowerCase().indexOf(kw)>=0); });
+  const head=r.slice(0,300);
+  $('mList').innerHTML = head.length? head.map(function(m){
+    return '<div class="it"><span class="nm">'+m.t+'</span><span class="mt">'+m.src+'</span><button onclick="useModel(\''+m.id+'\')">用</button></div>';
+  }).join('') : '<div class="it">无匹配</div>';
+  if(r.length>head.length) $('mList').insertAdjacentHTML('beforeend',
+    '<div class="it" style="color:var(--fg3)">…还有 '+(r.length-head.length)+' 个，用搜索缩小范围</div>');
 }
-['mSearch','mSource','mType'].forEach(id=>$(id).oninput=$(id).onchange=renderModels);
-window.useModel = id=>{
-  const s=$('model'); const o=[...s.options].find(x=>x.value===id);
-  if(o){ s.value=id; } else { const n=document.createElement('option'); n.value=id; n.textContent=id; s.appendChild(n); s.value=id; }
-  $('prompt').focus(); msg('已选模型：'+id,'ok');
+['mSearch','mSource','mType'].forEach(function(i){ $(i).oninput=renderModels; $(i).onchange=renderModels; });
+window.useModel=function(id){
+  const s=$('model'); let o=null;
+  for(var i=0;i<s.options.length;i++) if(s.options[i].value===id) o=s.options[i];
+  if(!o){ o=new Option(id,id); s.add(o); }
+  s.value=id; toast('已选模型：'+id,'ok');
+  $('prompt').scrollIntoView({behavior:'smooth',block:'center'});
 };
 
-/* ---------- 刷新 ---------- */
 async function refreshQueue(){
-  const q = await readFile('data/queue.json');
-  let n=0; try{ n=(JSON.parse(q.text||'[]')).length; }catch(e){}
-  $('queueTag').textContent='队列 '+n+' 条';
+  try{ const q=await readFile('data/queue.json'); let n=0;
+       try{n=(JSON.parse(q.text||'[]')).length}catch(e){}
+       $('queueTag').textContent='队列 '+n; }catch(e){}
 }
 async function refreshAll(){
-  if(!TOK) return;
-  // 会话状态
+  if(!TOK||!REPO) return;
   try{
-    const s = await readFile('data/session_status.json');
-    const r = await readFile('data/session_renew.json');
-    const sess = await readFile('data/session.json');
-    let st={}, re={}, se={};
-    try{ st=JSON.parse(s.text||'{}'); }catch(e){}
-    try{ re=JSON.parse(r.text||'{}'); }catch(e){}
-    try{ se=JSON.parse(sess.text||'{}'); }catch(e){}
-    const exp = Math.max(re.expiresAt||0, se.expiresAt||0);
-    const left = exp - Math.floor(Date.now()/1000);
-    $('stState').textContent = re.stop ? '已停止' : (left>0?'运行中':'已到期');
+    const arr=await Promise.all([readFile('data/session_status.json'),
+      readFile('data/session_renew.json'),readFile('data/session.json')]);
+    let st={},re={},sd={};
+    try{st=JSON.parse(arr[0].text||'{}')}catch(e){}
+    try{re=JSON.parse(arr[1].text||'{}')}catch(e){}
+    try{sd=JSON.parse(arr[2].text||'{}')}catch(e){}
+    const exp=Math.max(re.expiresAt||0,sd.expiresAt||0), left=exp-Math.floor(Date.now()/1000);
+    $('stState').textContent = re.stop?'已停止':(left>0?'运行中':'已到期');
     $('stState').style.color = re.stop?'var(--err)':(left>0?'var(--ok)':'var(--fg3)');
-    $('stLeft').textContent = left>0 ? Math.floor(left/60)+' 分 '+(left%60)+' 秒' : '—';
-    $('stRounds').textContent = st.rounds ?? '—';
-    const w = st.waf;
-    if(w){
-      const bad = (w.wafStreak>0)||w.circuitOpen;
-      $('stWaf').innerHTML = (w.circuitOpen? '熔断中 '+w.circuitLeftSec+'s' : (w.pausedSec>0? '退避 '+w.pausedSec+'s' : '正常'))
-        + ` <span class="tag">连击 ${w.wafStreak||0}</span> <span class="tag">并发 ${w.busy||0}/${w.maxConcurrent||4}</span>`;
-      $('stWaf').style.color = bad?'var(--warn)':'var(--ok)';
-    }
-    const total = Math.max(1,(se.expiresAt||exp)-((se.startedAt)||exp-900));
-    $('bar').style.width = Math.max(0,Math.min(100, left>0? left/total*100:0))+'%';
-  }catch(e){}
-  // run 状态
-  try{
-    const r = await gh(`/repos/${REPO}/actions/runs?per_page=5`);
-    RUNS = r.workflow_runs||[];
-    const s = RUNS.find(x=>x.path&&x.path.includes('session.yml')) || RUNS[0];
-    if(s){ $('stRun').innerHTML = `${s.status}${s.conclusion?' / '+s.conclusion:''} <span class="tag">#${s.run_number}</span>`;
-           $('sessDot').className='dot'+(s.status==='in_progress'?' run':''); }
-  }catch(e){}
-  // 号池
-  try{
-    const d = await readFile('data/dzmm_accounts.json');
-    let n=0; try{ n=(JSON.parse(d.text||'[]')).length; }catch(e){}
-    $('pDzmm').textContent = n? n+' 个' : '—';
+    $('stLeft').textContent = left>0? (Math.floor(left/60)+':'+String(left%60).padStart(2,'0')) : '—';
+    $('stRounds').textContent = (st.rounds===undefined||st.rounds===null)? '—' : st.rounds;
+    const tot=Math.max(1,(sd.expiresAt||exp)-(sd.startedAt||exp-900));
+    $('bar').style.width=Math.max(0,Math.min(100,left>0?left/tot*100:0))+'%';
+    if(st.waf){ const w=st.waf, bad=(w.wafStreak>0)||w.circuitOpen;
+      $('stWaf').textContent = w.circuitOpen?('熔断 '+w.circuitLeftSec+'s'):(w.pausedSec>0?('退避 '+w.pausedSec+'s'):'正常');
+      $('stWaf').style.color = bad?'var(--warn)':'var(--ok)'; }
   }catch(e){}
   try{
-    const p = await readFile('data/pixai_pool.json');
-    let arr=[]; try{ arr=JSON.parse(p.text||'[]'); }catch(e){}
-    const alive=arr.filter(x=>!x.dead).length;
-    $('pPixai').textContent = arr.length? alive+' / '+arr.length : '—';
+    const r=await gh('/repos/'+REPO+'/actions/runs?per_page=6'); RUNS=r.workflow_runs||[];
+    let s=null; for(var i=0;i<RUNS.length;i++) if((RUNS[i].path||'').indexOf('session.yml')>=0){ s=RUNS[i]; break; }
+    if(!s) s=RUNS[0];
+    if(s){ $('stRun').textContent=s.status+(s.conclusion?' / '+s.conclusion:'')+' #'+s.run_number;
+           $('connDot').className='dot'+((s.status==='in_progress')?' run':' on'); }
   }catch(e){}
-  // 产出
+  try{ const d=await readFile('data/dzmm_accounts.json'); let n=0;
+       try{n=(JSON.parse(d.text||'[]')).length}catch(e){} $('pDzmm').textContent=n||'—'; }catch(e){}
+  try{ const p=await readFile('data/pixai_pool.json'); let a=[];
+       try{a=JSON.parse(p.text||'[]')}catch(e){}
+       $('pPixai').textContent=a.length?(a.filter(function(x){return !x.dead}).length+'/'+a.length):'—'; }catch(e){}
   try{
-    const h = await readFile('outputs/history.json');
-    let hist=[]; try{ hist=JSON.parse(h.text||'[]'); }catch(e){}
-    $('pOut').textContent = hist.length? hist.length+' 张' : '—';
-    $('gal').innerHTML = hist.filter(x=>x.ok&&x.file).slice(0,12).map(x=>
-      `<a href="https://raw.githubusercontent.com/${REPO}/main/outputs/${x.file}" target="_blank" title="${x.model} · ${x.prompt||''}">
-        <img loading="lazy" src="https://raw.githubusercontent.com/${REPO}/main/outputs/${x.file}" alt=""></a>`).join('');
+    const h=await readFile('outputs/history.json'); let hist=[]; try{hist=JSON.parse(h.text||'[]')}catch(e){}
+    const ok=hist.filter(function(x){ return x.ok&&x.file; });
+    const base='https://raw.githubusercontent.com/'+REPO+'/main/outputs/';
+    $('gal').innerHTML=ok.slice(0,12).map(function(x){
+      return '<a href="'+base+x.file+'" target="_blank"><img loading="lazy" src="'+base+x.file+'"></a>'; }).join('');
+    if(ok[0]){ const t=new Date((ok[0].ts||0)*1000);
+      $('lastOut').innerHTML='最近一张：<b>'+ok[0].file+'</b>（'+Math.round((ok[0].bytes||0)/1024)+' KB，'+ok[0].source+'/'+ok[0].model+'，'+t.toLocaleTimeString('zh-CN')+'）'; }
+    else $('lastOut').textContent='还没有出图记录 — 提交一张试试';
   }catch(e){}
   refreshQueue();
-  // 日志
-  try{
-    const s = RUNS.find(x=>x.path&&x.path.includes('session.yml'));
-    if(s && $('log').textContent==='—'){
-      const j = await gh(`/repos/${REPO}/actions/runs/${s.id}/jobs`);
-      const job = (j.jobs||[])[0];
-      if(job){
-        const t = await fetch(`${API}/repos/${REPO}/actions/jobs/${job.id}/logs`, {headers:{Authorization:'token '+TOK}});
-        const txt = await t.text();
-        $('log').textContent = txt.split('\n').slice(-120).join('\n');
-      }
-    }
-  }catch(e){}
 }
 
-/* ---------- 自动连接 ---------- */
-if($('tok').value){ $('btnConn').click(); }
+if($('tok').value){ tokInfo(); $('btnConn').click(); }
 </script>
 </body>
 </html>
